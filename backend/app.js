@@ -8,6 +8,7 @@ import './models/User.js';
 import './models/Post.js';
 import './models/Comment.js';
 import './models/Like.js';
+import authRoutes from './routes/auths.js';
 
 dotenv.config();
 
@@ -32,6 +33,8 @@ app.get('/', (req, res) => {
     port: PORT 
   });
 });
+
+app.use('/api/auth', authRoutes);
 
 // 서버 시작
 app.listen(PORT, () => {
