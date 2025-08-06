@@ -4,6 +4,11 @@ import cors from 'cors';
 import helmet from 'helmet';
 import dotenv from 'dotenv';
 
+import './models/User.js';
+import './models/Post.js';
+import './models/Comment.js';
+import './models/Like.js';
+
 dotenv.config();
 
 const app = express();
