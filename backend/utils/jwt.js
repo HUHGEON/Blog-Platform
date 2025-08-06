@@ -55,31 +55,6 @@ export const verifyToken = (token) => {
   }
 };
 
-// 토큰에서 사용자 정보 추출
-export const extractUserFromToken = (token) => {
-  try {
-    const decoded = verifyToken(token);
-    return {
-      id: decoded.id,
-      userId: decoded.userId,
-      username: decoded.username,
-      type: decoded.type
-    };
-  } catch (error) {
-    throw error;
-  }
-};
-
-// 토큰 만료 시간 확인
-export const getTokenExpiry = (token) => {
-  try {
-    const decoded = jwt.decode(token);
-    return new Date(decoded.exp * 1000); // exp는 초 단위이므로 1000을 곱해 밀리초로 변환
-  } catch (error) {
-    throw new Error('토큰 디코딩에 실패했습니다');
-  }
-};
-
 // Access Token인지 확인
 export const isAccessToken = (token) => {
   try {
@@ -90,22 +65,9 @@ export const isAccessToken = (token) => {
   }
 };
 
-// Refresh Token인지 확인
-export const isRefreshToken = (token) => {
-  try {
-    const decoded = verifyToken(token);
-    return decoded.type === 'refresh';
-  } catch (error) {
-    return false;
-  }
-};
-
 export default {
   generateAccessToken,
   generateRefreshToken,
   verifyToken,
-  extractUserFromToken,
-  getTokenExpiry,
-  isAccessToken,
-  isRefreshToken
+  isAccessToken
 };
