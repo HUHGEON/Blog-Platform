@@ -14,9 +14,9 @@ const commentSchema = new mongoose.Schema({
   },
   comment_content: {
     type: String,
-    required: [true, '댓글 내용은 필수입니다'],
+    required: [true, '댓글을 입력해 주세요'],
     trim: true,
-    maxlength: [100, '댓글은 100글자 이하여야 합니다']
+    maxlength: [100, '댓글은 100글자 이하로 입력해 주세요']
   },
   comment_create_at: {
     type: Date,

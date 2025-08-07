@@ -43,7 +43,7 @@ likeSchema.statics.toggleLike = async function(userId, postId) {
         });
       }
       
-      return { action: 'unliked', message: '좋아요를 취소했습니다' };
+      return { action: 'unliked'};
       
     } else {
       // 좋아요 추가
@@ -61,10 +61,10 @@ likeSchema.statics.toggleLike = async function(userId, postId) {
         });
       }
       
-      return { action: 'liked', message: '좋아요를 눌렀습니다' };
+      return { action: 'liked'};
     }
   } catch (error) {
-    throw new Error('좋아요 처리 중 오류가 발생했습니다');
+    throw new Error('좋아요 처리 중 오류가 발생하였습니다');
   }
 };
 
