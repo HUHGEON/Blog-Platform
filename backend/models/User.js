@@ -18,7 +18,7 @@ const userSchema = new mongoose.Schema({
     validate: {
       validator: function(password) {
         // 문자와 숫자만 허용, 공백 없음
-        const passwordRegex = /^[a-zA-Z0-9]{8,16}$/;
+        const passwordRegex = /^[a-zA-Z0-9]{8,15}$/;
         return passwordRegex.test(password);
       },
       message: '비밀번호는 8-15자리이며, 영문자와 숫자만 사용 가능합니다'
