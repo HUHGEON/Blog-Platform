@@ -7,7 +7,7 @@ import HTTP_STATUS from '../constants/httpStatusCodes.js';
 const router = express.Router();
 
 // 회원가입
-router.post('/singup', async (req, res) => {
+router.post('/signup', async (req, res) => {
   try {
     const { id, pw, name, nickname, birth_date } = req.body;
 
@@ -23,6 +23,17 @@ router.post('/singup', async (req, res) => {
       return res.status(HTTP_STATUS.BAD_REQUEST).json({
         success: false,
         message: `${missingFields.join(', ')}을(를) 입력해주세요`
+      });
+    }
+
+    // 생년월일 검증 (프론트에서 type="date" 사용)
+    const birthDate = new Date(birth_date);
+    
+    if (isNaN(birthDate.getTime()) || birthDate > new Date()) {
+      const today = new Date().toISOString().split('T')[0];
+      return res.status(HTTP_STATUS.BAD_REQUEST).json({
+        success: false,
+        message: `올바른 생년월일을 입력해주세요 (${today} 이전 날짜)`
       });
     }
 
@@ -50,7 +61,7 @@ router.post('/singup', async (req, res) => {
       pw,
       name,
       nickname,
-      birth_date: new Date(birth_date)
+      birth_date: birthDate
     });
 
     await newUser.save();
@@ -71,11 +82,11 @@ router.post('/singup', async (req, res) => {
       const messages = Object.values(error.errors).map(err => err.message);
       return res.status(HTTP_STATUS.BAD_REQUEST).json({
         success: false,
-        message: messages[0] // 첫 번째 에러 메시지만 반환
+        message: messages.join(', ')
       });
     }
 
-    // MongoDB 중복키 에러 (추가 안전장치)
+    // MongoDB 선에서 띄우는 error(동시 가입, unique 제약 어길시)
     if (error.code === 11000) {
       const field = Object.keys(error.keyValue)[0];
       const fieldName = field === 'id' ? '아이디' : '닉네임';

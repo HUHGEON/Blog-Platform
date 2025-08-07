@@ -38,9 +38,18 @@ const userSchema = new mongoose.Schema({
     maxlength: [10, '닉네임은 10글자 이하로 생성해 주세요']
   },
   birth_date: {
-    type: Date,
-    required: [true, '생년월일을 입력해 주세요']
-  },
+  type: Date,
+  required: [true, '생년월일을 입력해 주세요'],
+  validate: {
+    validator: function(date) {
+      return date <= new Date();
+    },
+    message: function() {
+      const today = new Date().toISOString().split('T')[0]; // YYYY-MM-DD 형식
+      return `생년월일은 ${today} 이전이여야 합니다`;
+    }
+  }
+},
   followers: {
     type: [{
       type: mongoose.Schema.Types.ObjectId,
