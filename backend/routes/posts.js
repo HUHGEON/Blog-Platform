@@ -2,12 +2,13 @@ import express from 'express';
 import Post from '../models/Post.js';
 import User from '../models/User.js';
 import { authenticateToken } from '../middlewares/auth.js';
+import { upload } from '../middlewares/upload.js';
 import HTTP_STATUS from '../constants/httpStatusCodes.js';
 
 const router = express.Router();
 
-// 1. 게시글 작성
-router.post('/', authenticateToken, async (req, res) => {
+// 게시글 작성
+router.post('/', authenticateToken, upload.single('image'), async (req, res) => {
   try {
     const { title, post_content } = req.body;
     const userId = req.user.id; // 로그인한 사용자 ID
@@ -24,11 +25,18 @@ router.post('/', authenticateToken, async (req, res) => {
       });
     }
 
+    // 이미지 URL 생성 (선택사항)
+    let imageUrl = null;
+    if (req.file) {
+      imageUrl = `/uploads/${req.file.filename}`;
+    }
+
     // 게시글 생성
     const newPost = new Post({
       user_id: userId,
       title,
-      post_content
+      post_content,
+      image_url: imageUrl
     });
 
     await newPost.save();
@@ -45,17 +53,33 @@ router.post('/', authenticateToken, async (req, res) => {
         id: newPost._id,
         title: newPost.title,
         post_content: newPost.post_content,
+        image_url: newPost.image_url,
         post_create_at: newPost.post_create_at
       }
     });
 
   } catch (error) {
+    // multer 에러 처리
+    if (error.message === '이미지 파일만 업로드 가능합니다') {
+      return res.status(HTTP_STATUS.BAD_REQUEST).json({
+        success: false,
+        message: '이미지 파일만 업로드 가능합니다 (jpg, jpeg, png, gif)'
+      });
+    }
+
+    if (error.code === 'LIMIT_FILE_SIZE') {
+      return res.status(HTTP_STATUS.BAD_REQUEST).json({
+        success: false,
+        message: '이미지 크기는 5MB 이하여야 합니다'
+      });
+    }
+
     // Mongoose 유효성 검증 에러 처리
     if (error.name === 'ValidationError') {
       const messages = Object.values(error.errors).map(err => err.message);
       return res.status(HTTP_STATUS.BAD_REQUEST).json({
         success: false,
-        message: messages.join(', ') // 모든 에러를 쉼표로 연결
+        message: messages.join(', ')
       });
     }
 
@@ -93,7 +117,7 @@ router.get('/', async (req, res) => {
 
     // 페이지네이션 + 정렬 적용된 게시글 조회
     const posts = await Post.find()
-      .populate('user_id', 'id nickname name') // 작성자 정보 포함
+      .populate('user_id', 'nickname') // 닉네임만 포함 (공개 정보)
       .sort(sortOption) // 선택된 정렬 방식 적용
       .skip(skip) // 건너뛸 개수
       .limit(limit) // 가져올 개수
@@ -144,7 +168,7 @@ router.get('/:id', async (req, res) => {
       { $inc: { post_view_count: 1 } }, // 조회수 1 증가
       { new: true } // 업데이트된 문서 반환
     )
-    .populate('user_id', 'id nickname name') // 작성자 정보 포함
+    .populate('user_id', 'nickname') // 닉네임만 포함 (공개 정보)
     .select('title post_content post_like_count post_comment_count post_view_count post_create_at post_update_at image_url');
 
     if (!post) {
