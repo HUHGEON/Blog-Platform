@@ -25,7 +25,7 @@ router.post('/', authenticateToken, upload.single('image'), async (req, res) => 
       });
     }
 
-    // 이미지 URL 생성 (선택사항)
+    // 이미지 업로드
     let imageUrl = null;
     if (req.file) {
       imageUrl = `/uploads/${req.file.filename}`;
@@ -91,16 +91,15 @@ router.post('/', authenticateToken, upload.single('image'), async (req, res) => 
   }
 });
 
-// 2. 게시글 목록 조회 (페이지네이션 + 정렬 옵션) - 공개
+// 게시글 목록 조회
 router.get('/', async (req, res) => {
   try {
-    // 쿼리 파라미터에서 페이지 정보 추출
     const page = parseInt(req.query.page) || 1; // 기본값: 1페이지
     const limit = parseInt(req.query.limit) || 10; // 기본값: 10개씩
     const sortBy = req.query.sort || 'latest'; // 기본값: 최신순
     const skip = (page - 1) * limit;
 
-    // 정렬 옵션 객체
+    // 정렬 옵션
     const sortOptions = {
       latest: { post_create_at: -1 },
       views: { post_view_count: -1, post_create_at: -1 },
@@ -168,7 +167,7 @@ router.get('/:id', async (req, res) => {
       { $inc: { post_view_count: 1 } }, // 조회수 1 증가
       { new: true } // 업데이트된 문서 반환
     )
-    .populate('user_id', 'nickname') // 닉네임만 포함 (공개 정보)
+    .populate('user_id', 'nickname') // 닉네임만 포함
     .select('title post_content post_like_count post_comment_count post_view_count post_create_at post_update_at image_url');
 
     if (!post) {
