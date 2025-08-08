@@ -1,5 +1,4 @@
 import mongoose from 'mongoose';
-import { getKoreanTime } from '../utils/timezone.js';
 
 const commentSchema = new mongoose.Schema({
   user_id: {
@@ -20,7 +19,7 @@ const commentSchema = new mongoose.Schema({
   },
   comment_create_at: {
     type: Date,
-    default: getKoreanTime,
+    default: Date.now,  // UTC로 저장
     required: true
   },
   comment_update_time: {
@@ -68,7 +67,7 @@ commentSchema.post('findOneAndDelete', async function(doc) {
 // 수정 시간 업데이트 미들웨어
 commentSchema.pre('save', function(next) {
   if (!this.isNew && this.isModified('comment_content')) {
-    this.comment_update_time = getKoreanTime();
+    this.comment_update_time = new Date(); // UTC로 저장
   }
   next();
 });
