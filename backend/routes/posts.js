@@ -4,9 +4,14 @@ import User from '../models/User.js';
 import { authenticateToken } from '../middlewares/auth.js';
 import { upload } from '../middlewares/upload.js';
 import HTTP_STATUS from '../constants/httpStatusCodes.js';
-import { getKoreanTime } from '../utils/timezone.js';
+import moment from 'moment-timezone';
 
 const router = express.Router();
+
+// 한국 시간 24시간 형식 함수
+const formatKoreanTime = (date) => {
+  return moment(date).tz('Asia/Seoul').format('HH시 mm분 ss초');
+};
 
 // 게시글 작성
 router.post('/', authenticateToken, upload.single('image'), async (req, res) => {
@@ -55,7 +60,8 @@ router.post('/', authenticateToken, upload.single('image'), async (req, res) => 
         title: newPost.title,
         post_content: newPost.post_content,
         image_url: newPost.image_url,
-        post_create_at: newPost.post_create_at
+        post_create_at: newPost.post_create_at,
+        created_at_display: formatKoreanTime(newPost.post_create_at)
       }
     });
 
@@ -123,11 +129,17 @@ router.get('/', async (req, res) => {
       .limit(limit) // 가져올 개수
       .select('title post_like_count post_comment_count post_view_count post_create_at image_url'); // 목록에 필요한 필드만
 
+    // 한국시간으로 포맷해서 전송
+    const formattedPosts = posts.map(post => ({
+      ...post.toObject(),
+      created_at_display: formatKoreanTime(post.post_create_at)
+    }));
+
     res.status(HTTP_STATUS.OK).json({
       success: true,
       message: '게시글 목록 조회 성공',
       data: {
-        posts,
+        posts: formattedPosts,
         pagination: {
           currentPage: page,
           totalPages,
@@ -178,10 +190,17 @@ router.get('/:id', async (req, res) => {
       });
     }
 
+    // 한국시간으로 포맷해서 전송
+    const formattedPost = {
+      ...post.toObject(),
+      created_at_display: formatKoreanTime(post.post_create_at),
+      updated_at_display: post.post_update_at ? formatKoreanTime(post.post_update_at) : null
+    };
+
     res.status(HTTP_STATUS.OK).json({
       success: true,
       message: '게시글 조회 성공',
-      data: post
+      data: formattedPost
     });
 
   } catch (error) {
@@ -257,7 +276,7 @@ router.put('/:id', authenticateToken, upload.single('image'), async (req, res) =
         title,
         post_content,
         image_url: imageUrl,
-        post_update_at: getKoreanTime() 
+        post_update_at: new Date() // UTC로 수정
       },
       { new: true } // 업데이트된 문서 반환
     );
@@ -270,7 +289,8 @@ router.put('/:id', authenticateToken, upload.single('image'), async (req, res) =
         title: updatedPost.title,
         post_content: updatedPost.post_content,
         image_url: updatedPost.image_url,
-        post_update_at: updatedPost.post_update_at
+        post_update_at: updatedPost.post_update_at,
+        updated_at_display: formatKoreanTime(updatedPost.post_update_at)
       }
     });
 

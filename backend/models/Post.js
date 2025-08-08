@@ -1,5 +1,4 @@
 import mongoose from 'mongoose';
-import { getKoreanTime } from '../utils/timezone.js';
 
 const postSchema = new mongoose.Schema({
   user_id: {
@@ -34,7 +33,7 @@ const postSchema = new mongoose.Schema({
   },
   post_create_at: {
     type: Date,
-    default: getKoreanTime,
+    default: Date.now,  // 단순하게 UTC로 저장
     required: true
   },
   post_update_at: {
@@ -68,7 +67,7 @@ postSchema.methods.incrementViews = function() {
 // 수정 시간 업데이트 미들웨어
 postSchema.pre('save', function(next) {
   if (!this.isNew && this.isModified()) {
-    this.post_update_at = getKoreanTime();
+    this.post_update_at = new Date(); // UTC로 저장
   }
   next();
 });
