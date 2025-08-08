@@ -34,7 +34,7 @@ mongoose.connect(process.env.MONGODB_URI)
   .catch(err => console.error('MongoDB 연결 실패:', err));
 
 // 라우터 설정
-app.use('/api/auth', authRoutes);
+app.use('/api/auths', authRoutes);
 app.use('/api/posts', postRoutes);
 
 app.get('/', (req, res) => {
