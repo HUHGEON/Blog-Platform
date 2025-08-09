@@ -327,4 +327,138 @@ router.put('/:id', authenticateToken, upload.single('image'), async (req, res) =
   }
 });
 
+// 게시글 삭제
+router.delete('/:id', authenticateToken, async (req, res) => {
+  try {
+    const postId = req.params.id;
+    const userId = req.user.id;
+
+    // MongoDB ObjectId 형식 검증
+    if (!postId.match(/^[0-9a-fA-F]{24}$/)) {
+      return res.status(HTTP_STATUS.BAD_REQUEST).json({
+        success: false,
+        message: '올바르지 않은 게시글 ID 형식입니다'
+      });
+    }
+
+    // 게시글 존재 여부 및 작성자 확인
+    const existingPost = await Post.findById(postId);
+    if (!existingPost) {
+      return res.status(HTTP_STATUS.NOT_FOUND).json({
+        success: false,
+        message: '존재하지 않는 게시글입니다'
+      });
+    }
+
+    // 작성자 권한 확인
+    if (existingPost.user_id.toString() !== userId.toString()) {
+      return res.status(HTTP_STATUS.FORBIDDEN).json({
+        success: false,
+        message: '본인의 게시글만 삭제할 수 있습니다'
+      });
+    }
+
+    // 게시글 삭제
+    await Post.findByIdAndDelete(postId);
+
+    // 사용자의 게시글 수 감소
+    await User.findByIdAndUpdate(userId, {
+      $inc: { user_post_count: -1 }
+    });
+
+    res.status(HTTP_STATUS.OK).json({
+      success: true,
+      message: '게시글이 삭제되었습니다',
+      data: {
+        deletedPostId: postId
+      }
+    });
+
+  } catch (error) {
+    console.error('게시글 삭제 에러:', error);
+    res.status(HTTP_STATUS.INTERNAL_SERVER_ERROR).json({
+      success: false,
+      message: '서버 오류가 발생했습니다'
+    });
+  }
+});
+
+// 게시글 검색
+router.get('/search', async (req, res) => {
+  try {
+    const { q: searchQuery, page = 1, limit = 10 } = req.query;
+
+    // 검색어 검증
+    if (!searchQuery || searchQuery.trim() === '') {
+      return res.status(HTTP_STATUS.BAD_REQUEST).json({
+        success: false,
+        message: '검색어를 입력해주세요'
+      });
+    }
+
+    // 검색어 길이 제한
+    if (searchQuery.length > 50) {
+      return res.status(HTTP_STATUS.BAD_REQUEST).json({
+        success: false,
+        message: '검색어는 50글자 이하로 입력해주세요'
+      });
+    }
+
+    const pageNumber = parseInt(page) || 1;
+    const limitNumber = parseInt(limit) || 10;
+    const skip = (pageNumber - 1) * limitNumber;
+
+    // MongoDB 텍스트 검색
+    const searchFilter = {
+      $text: {
+        $search: searchQuery.trim()
+      }
+    };
+
+    // 검색 결과 총 개수
+    const totalResults = await Post.countDocuments(searchFilter);
+    const totalPages = Math.ceil(totalResults / limitNumber);
+
+    // 검색 결과 조회 (스코어 기준 정렬)
+    const posts = await Post.find(searchFilter, {
+      score: { $meta: 'textScore' }
+    })
+      .populate('user_id', 'nickname')
+      .sort({ score: { $meta: 'textScore' } }) // 검색 스코어 순 정렬
+      .skip(skip)
+      .limit(limitNumber)
+      .select('title post_like_count post_comment_count post_view_count post_create_at image_url');
+
+    // 한국시간으로 포맷해서 전송
+    const formattedPosts = posts.map(post => ({
+      ...post.toObject(),
+      created_at_display: formatKoreanTime(post.post_create_at)
+    }));
+
+    res.status(HTTP_STATUS.OK).json({
+      success: true,
+      message: totalResults > 0 ? '검색 결과 조회 성공' : '검색 결과가 없습니다',
+      data: {
+        posts: formattedPosts,
+        pagination: {
+          currentPage: pageNumber,
+          totalPages,
+          totalResults,
+          limit: limitNumber,
+          hasNextPage: pageNumber < totalPages,
+          hasPrevPage: pageNumber > 1
+        },
+        searchQuery: searchQuery.trim()
+      }
+    });
+
+  } catch (error) {
+    console.error('게시글 검색 에러:', error);
+    res.status(HTTP_STATUS.INTERNAL_SERVER_ERROR).json({
+      success: false,
+      message: '서버 오류가 발생했습니다'
+    });
+  }
+});
+
 export default router;
