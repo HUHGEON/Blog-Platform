@@ -9,7 +9,7 @@ import moment from 'moment-timezone';
 const router = express.Router();
 
 // 한국 시간 24시간 형식 함수
-const formatKoreanTime = (date) => {
+const format_korean_time = (date) => {
   return moment(date).tz('Asia/Seoul').format('HH시 mm분 ss초');
 };
 
@@ -17,38 +17,38 @@ const formatKoreanTime = (date) => {
 router.post('/', authenticateToken, upload.single('image'), async (req, res) => {
   try {
     const { title, post_content } = req.body;
-    const userId = req.user.id; // 로그인한 사용자 ID
+    const user_id = req.user.id;
 
     // 필수 필드 검증
-    const missingFields = [];
-    if (!title) missingFields.push('제목');
-    if (!post_content) missingFields.push('내용');
+    const missing_fields = [];
+    if (!title) missing_fields.push('제목');
+    if (!post_content) missing_fields.push('내용');
 
-    if (missingFields.length > 0) {
+    if (missing_fields.length > 0) {
       return res.status(HTTP_STATUS.BAD_REQUEST).json({
         success: false,
-        message: `${missingFields.join(', ')}을(를) 입력해주세요`
+        message: `${missing_fields.join(', ')}을(를) 입력해주세요`
       });
     }
 
     // 이미지 업로드
-    let imageUrl = null;
+    let image_url = null;
     if (req.file) {
-      imageUrl = `/uploads/${req.file.filename}`;
+      image_url = `/uploads/${req.file.filename}`;
     }
 
     // 게시글 생성
-    const newPost = new Post({
-      user_id: userId,
+    const new_post = new Post({
+      user_id: user_id,
       title,
       post_content,
-      image_url: imageUrl
+      image_url: image_url
     });
 
-    await newPost.save();
+    await new_post.save();
 
     // 사용자의 게시글 수 증가
-    await User.findByIdAndUpdate(userId, {
+    await User.findByIdAndUpdate(user_id, {
       $inc: { user_post_count: 1 }
     });
 
@@ -56,12 +56,12 @@ router.post('/', authenticateToken, upload.single('image'), async (req, res) => 
       success: true,
       message: '게시글이 등록되었습니다',
       data: {
-        id: newPost._id,
-        title: newPost.title,
-        post_content: newPost.post_content,
-        image_url: newPost.image_url,
-        post_create_at: newPost.post_create_at,
-        created_at_display: formatKoreanTime(newPost.post_create_at)
+        id: new_post._id,
+        title: new_post.title,
+        post_content: new_post.post_content,
+        image_url: new_post.image_url,
+        post_create_at: new_post.post_create_at,
+        created_at_display: format_korean_time(new_post.post_create_at)
       }
     });
 
@@ -101,13 +101,13 @@ router.post('/', authenticateToken, upload.single('image'), async (req, res) => 
 // 게시글 목록 조회
 router.get('/', async (req, res) => {
   try {
-    const page = parseInt(req.query.page) || 1; // 기본값: 1페이지
-    const limit = parseInt(req.query.limit) || 10; // 기본값: 10개씩
-    const sortBy = req.query.sort || 'latest'; // 기본값: 최신순
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 10;
+    const sort_by = req.query.sort || 'latest';
     const skip = (page - 1) * limit;
 
     // 정렬 옵션
-    const sortOptions = {
+    const sort_options = {
       latest: { post_create_at: -1 },
       views: { post_view_count: -1, post_create_at: -1 },
       likes: { post_like_count: -1, post_create_at: -1 },
@@ -115,40 +115,40 @@ router.get('/', async (req, res) => {
     };
 
     // 유효하지 않은 정렬 옵션 처리
-    const sortOption = sortOptions[sortBy] || sortOptions.latest;
+    const sort_option = sort_options[sort_by] || sort_options.latest;
 
     // 전체 게시글 수 조회
-    const totalPosts = await Post.countDocuments();
-    const totalPages = Math.ceil(totalPosts / limit);
+    const total_posts = await Post.countDocuments();
+    const total_pages = Math.ceil(total_posts / limit);
 
     // 페이지네이션 + 정렬 적용된 게시글 조회
     const posts = await Post.find()
-      .populate('user_id', 'nickname') // 닉네임만 포함 (공개 정보)
-      .sort(sortOption) // 선택된 정렬 방식 적용
-      .skip(skip) // 건너뛸 개수
-      .limit(limit) // 가져올 개수
-      .select('title post_like_count post_comment_count post_view_count post_create_at image_url'); // 목록에 필요한 필드만
+      .populate('user_id', 'nickname')
+      .sort(sort_option)
+      .skip(skip)
+      .limit(limit)
+      .select('title post_like_count post_comment_count post_view_count post_create_at image_url');
 
     // 한국시간으로 포맷해서 전송
-    const formattedPosts = posts.map(post => ({
+    const formatted_posts = posts.map(post => ({
       ...post.toObject(),
-      created_at_display: formatKoreanTime(post.post_create_at)
+      created_at_display: format_korean_time(post.post_create_at)
     }));
 
     res.status(HTTP_STATUS.OK).json({
       success: true,
       message: '게시글 목록 조회 성공',
       data: {
-        posts: formattedPosts,
+        posts: formatted_posts,
         pagination: {
           currentPage: page,
-          totalPages,
-          totalPosts,
+          totalPages: total_pages,
+          totalPosts: total_posts,
           limit,
-          hasNextPage: page < totalPages,
+          hasNextPage: page < total_pages,
           hasPrevPage: page > 1
         },
-        sort: sortBy
+        sort: sort_by
       }
     });
 
@@ -164,10 +164,10 @@ router.get('/', async (req, res) => {
 // 게시글 검색 API
 router.get('/search', async (req, res) => {
   try {
-    const { q: searchQuery, page = 1, limit = 10 } = req.query;
+    const { q: search_query, page = 1, limit = 10 } = req.query;
 
     // 검색어 검증
-    if (!searchQuery || searchQuery.trim() === '') {
+    if (!search_query || search_query.trim() === '') {
       return res.status(HTTP_STATUS.BAD_REQUEST).json({
         success: false,
         message: '검색어를 입력해주세요'
@@ -175,58 +175,58 @@ router.get('/search', async (req, res) => {
     }
 
     // 검색어 길이 제한
-    if (searchQuery.length > 50) {
+    if (search_query.length > 50) {
       return res.status(HTTP_STATUS.BAD_REQUEST).json({
         success: false,
         message: '검색어는 50글자 이하로 입력해주세요'
       });
     }
 
-    const pageNumber = parseInt(page) || 1;
-    const limitNumber = parseInt(limit) || 10;
-    const skip = (pageNumber - 1) * limitNumber;
+    const page_number = parseInt(page) || 1;
+    const limit_number = parseInt(limit) || 10;
+    const skip = (page_number - 1) * limit_number;
 
     // MongoDB 텍스트 검색
-    const searchFilter = {
+    const search_filter = {
       $text: {
-        $search: searchQuery.trim()
+        $search: search_query.trim()
       }
     };
 
     // 검색 결과 총 개수
-    const totalResults = await Post.countDocuments(searchFilter);
-    const totalPages = Math.ceil(totalResults / limitNumber);
+    const total_results = await Post.countDocuments(search_filter);
+    const total_pages = Math.ceil(total_results / limit_number);
 
     // 검색 결과 조회 (스코어 기준 정렬)
-    const posts = await Post.find(searchFilter, {
+    const posts = await Post.find(search_filter, {
       score: { $meta: 'textScore' }
     })
       .populate('user_id', 'nickname')
-      .sort({ score: { $meta: 'textScore' } }) // 검색 스코어 순 정렬
+      .sort({ score: { $meta: 'textScore' } })
       .skip(skip)
-      .limit(limitNumber)
+      .limit(limit_number)
       .select('title post_like_count post_comment_count post_view_count post_create_at'); 
 
     // 한국시간으로 포맷해서 전송
-    const formattedPosts = posts.map(post => ({
+    const formatted_posts = posts.map(post => ({
       ...post.toObject(),
-      created_at_display: formatKoreanTime(post.post_create_at)
+      created_at_display: format_korean_time(post.post_create_at)
     }));
 
     res.status(HTTP_STATUS.OK).json({
       success: true,
-      message: totalResults > 0 ? '검색 결과 조회 성공' : '검색 결과가 없습니다',
+      message: total_results > 0 ? '검색 결과 조회 성공' : '검색 결과가 없습니다',
       data: {
-        posts: formattedPosts,
+        posts: formatted_posts,
         pagination: {
-          currentPage: pageNumber,
-          totalPages,
-          totalResults,
-          limit: limitNumber,
-          hasNextPage: pageNumber < totalPages,
-          hasPrevPage: pageNumber > 1
+          currentPage: page_number,
+          totalPages: total_pages,
+          totalResults: total_results,
+          limit: limit_number,
+          hasNextPage: page_number < total_pages,
+          hasPrevPage: page_number > 1
         },
-        searchQuery: searchQuery.trim()
+        searchQuery: search_query.trim()
       }
     });
 
@@ -255,10 +255,10 @@ router.get('/:id', async (req, res) => {
     // 게시글 조회 및 조회수 증가
     const post = await Post.findByIdAndUpdate(
       id,
-      { $inc: { post_view_count: 1 } }, // 조회수 1 증가
-      { new: true } // 업데이트된 문서 반환
+      { $inc: { post_view_count: 1 } },
+      { new: true }
     )
-    .populate('user_id', 'nickname') // 닉네임만 포함
+    .populate('user_id', 'nickname')
     .select('title post_content post_like_count post_comment_count post_view_count post_create_at post_update_at image_url');
 
     if (!post) {
@@ -269,16 +269,16 @@ router.get('/:id', async (req, res) => {
     }
 
     // 한국시간으로 포맷해서 전송
-    const formattedPost = {
+    const formatted_post = {
       ...post.toObject(),
-      created_at_display: formatKoreanTime(post.post_create_at),
-      updated_at_display: post.post_update_at ? formatKoreanTime(post.post_update_at) : null
+      created_at_display: format_korean_time(post.post_create_at),
+      updated_at_display: post.post_update_at ? format_korean_time(post.post_update_at) : null
     };
 
     res.status(HTTP_STATUS.OK).json({
       success: true,
       message: '게시글 조회 성공',
-      data: formattedPost
+      data: formatted_post
     });
 
   } catch (error) {
@@ -293,12 +293,12 @@ router.get('/:id', async (req, res) => {
 // 게시글 수정
 router.put('/:id', authenticateToken, upload.single('image'), async (req, res) => {
   try {
-    const postId = req.params.id;
+    const post_id = req.params.id;
     const { title, post_content, removeImage } = req.body;
-    const userId = req.user.id;
+    const user_id = req.user.id;
 
     // MongoDB ObjectId 형식 검증
-    if (!postId.match(/^[0-9a-fA-F]{24}$/)) {
+    if (!post_id.match(/^[0-9a-fA-F]{24}$/)) {
       return res.status(HTTP_STATUS.BAD_REQUEST).json({
         success: false,
         message: '올바르지 않은 게시글 ID 형식입니다'
@@ -306,8 +306,8 @@ router.put('/:id', authenticateToken, upload.single('image'), async (req, res) =
     }
 
     // 게시글 존재 여부 및 작성자 확인
-    const existingPost = await Post.findById(postId);
-    if (!existingPost) {
+    const existing_post = await Post.findById(post_id);
+    if (!existing_post) {
       return res.status(HTTP_STATUS.NOT_FOUND).json({
         success: false,
         message: '존재하지 않는 게시글입니다'
@@ -315,7 +315,7 @@ router.put('/:id', authenticateToken, upload.single('image'), async (req, res) =
     }
 
     // 작성자 권한 확인
-    if (existingPost.user_id.toString() !== userId.toString()) {
+    if (existing_post.user_id.toString() !== user_id.toString()) {
       return res.status(HTTP_STATUS.FORBIDDEN).json({
         success: false,
         message: '본인의 게시글만 수정할 수 있습니다'
@@ -323,52 +323,52 @@ router.put('/:id', authenticateToken, upload.single('image'), async (req, res) =
     }
 
     // 필수 필드 검증
-    const missingFields = [];
-    if (!title) missingFields.push('제목');
-    if (!post_content) missingFields.push('내용');
+    const missing_fields = [];
+    if (!title) missing_fields.push('제목');
+    if (!post_content) missing_fields.push('내용');
 
-    if (missingFields.length > 0) {
+    if (missing_fields.length > 0) {
       return res.status(HTTP_STATUS.BAD_REQUEST).json({
         success: false,
-        message: `${missingFields.join(', ')}을(를) 입력해주세요`
+        message: `${missing_fields.join(', ')}을(를) 입력해주세요`
       });
     }
 
-    let imageUrl;
+    let image_url;
 
     if (req.file) {
       // 새 이미지가 업로드됨 -> 기존 이미지를 삭제하고 업로드
-      imageUrl = `/uploads/${req.file.filename}`;
+      image_url = `/uploads/${req.file.filename}`;
     } else if (removeImage === 'true') {
       // 기존 이미지만 삭제
-      imageUrl = null;
+      image_url = null;
     } else {
       // 기존 이미지 유지
-      imageUrl = existingPost.image_url;
+      image_url = existing_post.image_url;
     }
 
     // 게시글 수정
-    const updatedPost = await Post.findByIdAndUpdate(
-      postId,
+    const updated_post = await Post.findByIdAndUpdate(
+      post_id,
       {
         title,
         post_content,
-        image_url: imageUrl,
-        post_update_at: new Date() // UTC로 수정
+        image_url: image_url,
+        post_update_at: new Date()
       },
-      { new: true } // 업데이트된 문서 반환
+      { new: true }
     );
 
     res.status(HTTP_STATUS.OK).json({
       success: true,
       message: '게시글이 수정되었습니다',
       data: {
-        id: updatedPost._id,
-        title: updatedPost.title,
-        post_content: updatedPost.post_content,
-        image_url: updatedPost.image_url,
-        post_update_at: updatedPost.post_update_at,
-        updated_at_display: formatKoreanTime(updatedPost.post_update_at)
+        id: updated_post._id,
+        title: updated_post.title,
+        post_content: updated_post.post_content,
+        image_url: updated_post.image_url,
+        post_update_at: updated_post.post_update_at,
+        updated_at_display: format_korean_time(updated_post.post_update_at)
       }
     });
 
@@ -408,11 +408,11 @@ router.put('/:id', authenticateToken, upload.single('image'), async (req, res) =
 // 게시글 삭제
 router.delete('/:id', authenticateToken, async (req, res) => {
   try {
-    const postId = req.params.id;
-    const userId = req.user.id;
+    const post_id = req.params.id;
+    const user_id = req.user.id;
 
     // MongoDB ObjectId 형식 검증
-    if (!postId.match(/^[0-9a-fA-F]{24}$/)) {
+    if (!post_id.match(/^[0-9a-fA-F]{24}$/)) {
       return res.status(HTTP_STATUS.BAD_REQUEST).json({
         success: false,
         message: '올바르지 않은 게시글 ID 형식입니다'
@@ -420,8 +420,8 @@ router.delete('/:id', authenticateToken, async (req, res) => {
     }
 
     // 게시글 존재 여부 및 작성자 확인
-    const existingPost = await Post.findById(postId);
-    if (!existingPost) {
+    const existing_post = await Post.findById(post_id);
+    if (!existing_post) {
       return res.status(HTTP_STATUS.NOT_FOUND).json({
         success: false,
         message: '존재하지 않는 게시글입니다'
@@ -429,7 +429,7 @@ router.delete('/:id', authenticateToken, async (req, res) => {
     }
 
     // 작성자 권한 확인
-    if (existingPost.user_id.toString() !== userId.toString()) {
+    if (existing_post.user_id.toString() !== user_id.toString()) {
       return res.status(HTTP_STATUS.FORBIDDEN).json({
         success: false,
         message: '본인의 게시글만 삭제할 수 있습니다'
@@ -437,10 +437,10 @@ router.delete('/:id', authenticateToken, async (req, res) => {
     }
 
     // 게시글 삭제
-    await Post.findByIdAndDelete(postId);
+    await Post.findByIdAndDelete(post_id);
 
     // 사용자의 게시글 수 감소
-    await User.findByIdAndUpdate(userId, {
+    await User.findByIdAndUpdate(user_id, {
       $inc: { user_post_count: -1 }
     });
 
@@ -448,7 +448,7 @@ router.delete('/:id', authenticateToken, async (req, res) => {
       success: true,
       message: '게시글이 삭제되었습니다',
       data: {
-        deletedPostId: postId
+        deletedPostId: post_id
       }
     });
 

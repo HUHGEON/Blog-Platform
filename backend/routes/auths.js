@@ -9,27 +9,27 @@ const router = express.Router();
 // 회원가입
 router.post('/signup', async (req, res) => {
   try {
-    const { id, pw, name, nickname, birth_date } = req.body;
+    const { id, pw, name, nickname, birth_date: birth_date_string } = req.body;
 
     // 필수 필드 검증
-    const missingFields = [];
-    if (!id) missingFields.push('아이디');
-    if (!pw) missingFields.push('비밀번호');
-    if (!name) missingFields.push('이름');
-    if (!nickname) missingFields.push('닉네임');
-    if (!birth_date) missingFields.push('생년월일');
+    const missing_fields = [];
+    if (!id) missing_fields.push('아이디');
+    if (!pw) missing_fields.push('비밀번호');
+    if (!name) missing_fields.push('이름');
+    if (!nickname) missing_fields.push('닉네임');
+    if (!birth_date_string) missing_fields.push('생년월일');
 
-    if (missingFields.length > 0) {
+    if (missing_fields.length > 0) {
       return res.status(HTTP_STATUS.BAD_REQUEST).json({
         success: false,
-        message: `${missingFields.join(', ')}을(를) 입력해주세요`
+        message: `${missing_fields.join(', ')}을(를) 입력해주세요`
       });
     }
 
     // 생년월일 검증 (프론트에서 type="date" 사용)
-    const birthDate = new Date(birth_date);
+    const birth_date = new Date(birth_date_string);
     
-    if (isNaN(birthDate.getTime()) || birthDate > new Date()) {
+    if (isNaN(birth_date.getTime()) || birth_date > new Date()) {
       const today = new Date().toISOString().split('T')[0];
       return res.status(HTTP_STATUS.BAD_REQUEST).json({
         success: false,
@@ -38,8 +38,8 @@ router.post('/signup', async (req, res) => {
     }
 
     // ID 중복 확인
-    const existingUserId = await User.findOne({ id });
-    if (existingUserId) {
+    const existing_user_id = await User.findOne({ id });
+    if (existing_user_id) {
       return res.status(HTTP_STATUS.CONFLICT).json({
         success: false,
         message: '이미 사용중인 아이디입니다'
@@ -47,8 +47,8 @@ router.post('/signup', async (req, res) => {
     }
 
     // 닉네임 중복 확인
-    const existingUserNickname = await User.findOne({ nickname });
-    if (existingUserNickname) {
+    const existing_user_nickname = await User.findOne({ nickname });
+    if (existing_user_nickname) {
       return res.status(HTTP_STATUS.CONFLICT).json({
         success: false,
         message: '이미 사용중인 닉네임입니다'
@@ -56,23 +56,23 @@ router.post('/signup', async (req, res) => {
     }
 
     // 사용자 생성
-    const newUser = new User({
+    const new_user = new User({
       id,
       pw,
       name,
       nickname,
-      birth_date: birthDate
+      birth_date: birth_date
     });
 
-    await newUser.save();
+    await new_user.save();
 
     res.status(HTTP_STATUS.CREATED).json({
       success: true,
       message: '회원가입이 완료되었습니다',
       data: {
-        id: newUser.id,
-        name: newUser.name,
-        nickname: newUser.nickname
+        id: new_user.id,
+        name: new_user.name,
+        nickname: new_user.nickname
       }
     });
 
@@ -89,10 +89,10 @@ router.post('/signup', async (req, res) => {
     // MongoDB 선에서 띄우는 error(동시 가입, unique 제약 어길시)
     if (error.code === 11000) {
       const field = Object.keys(error.keyValue)[0];
-      const fieldName = field === 'id' ? '아이디' : '닉네임';
+      const field_name = field === 'id' ? '아이디' : '닉네임';
       return res.status(HTTP_STATUS.CONFLICT).json({
         success: false,
-        message: `이미 사용중인 ${fieldName}입니다`
+        message: `이미 사용중인 ${field_name}입니다`
       });
     }
 
@@ -110,14 +110,14 @@ router.post('/login', async (req, res) => {
     const { id, pw } = req.body;
 
     // 필수 필드 검증
-    const missingFields = [];
-    if (!id) missingFields.push('아이디');
-    if (!pw) missingFields.push('비밀번호');
+    const missing_fields = [];
+    if (!id) missing_fields.push('아이디');
+    if (!pw) missing_fields.push('비밀번호');
 
-    if (missingFields.length > 0) {
+    if (missing_fields.length > 0) {
       return res.status(HTTP_STATUS.BAD_REQUEST).json({
         success: false,
-        message: `${missingFields.join(', ')}을(를) 입력해주세요`
+        message: `${missing_fields.join(', ')}을(를) 입력해주세요`
       });
     }
 
@@ -131,8 +131,8 @@ router.post('/login', async (req, res) => {
     }
 
     // 비밀번호 확인
-    const isPasswordValid = await user.comparePassword(pw);
-    if (!isPasswordValid) {
+    const is_password_valid = await user.comparePassword(pw);
+    if (!is_password_valid) {
       return res.status(HTTP_STATUS.UNAUTHORIZED).json({
         success: false,
         message: '아이디 또는 비밀번호가 올바르지 않습니다'
@@ -140,8 +140,8 @@ router.post('/login', async (req, res) => {
     }
 
     // 토큰 생성
-    const accessToken = generateAccessToken(user);
-    const refreshToken = generateRefreshToken(user);
+    const access_token = generateAccessToken(user);
+    const refresh_token = generateRefreshToken(user);
 
     res.status(HTTP_STATUS.OK).json({
       success: true,
@@ -153,8 +153,8 @@ router.post('/login', async (req, res) => {
           name: user.name
         },
         tokens: {
-          accessToken,
-          refreshToken
+          accessToken: access_token,
+          refreshToken: refresh_token
         }
       }
     });
@@ -181,13 +181,13 @@ router.post('/refresh', authenticateRefreshToken, async (req, res) => {
     }
 
     // 새로운 Access Token 생성
-    const accessToken = generateAccessToken(user);
+    const access_token = generateAccessToken(user);
 
     res.status(HTTP_STATUS.OK).json({
       success: true,
       message: '토큰 갱신 완료',
       data: {
-        accessToken
+        accessToken: access_token
       }
     });
 
