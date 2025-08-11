@@ -12,32 +12,7 @@ router.post('/like', authenticateToken, async (req, res) => {
     const { post_id } = req.body;
     const user_id = req.user.id;
 
-    // post_id 검증
-    if (!post_id) {
-      return res.status(HTTP_STATUS.BAD_REQUEST).json({
-        success: false,
-        message: '게시글 ID를 입력해주세요'
-      });
-    }
-
-    // MongoDB ObjectId 형식 검증
-    if (!post_id.match(/^[0-9a-fA-F]{24}$/)) {
-      return res.status(HTTP_STATUS.BAD_REQUEST).json({
-        success: false,
-        message: '올바르지 않은 게시글 ID 형식입니다'
-      });
-    }
-
-    // 게시글 존재 여부 확인
-    const post = await Post.findById(post_id);
-    if (!post) {
-      return res.status(HTTP_STATUS.NOT_FOUND).json({
-        success: false,
-        message: '존재하지 않는 게시글입니다'
-      });
-    }
-
-    // 좋아요 토글 실행 (Like 모델의 toggleLike 메서드 활용)
+    // 좋아요 토글 실행
     const result = await Like.toggleLike(user_id, post_id);
 
     // 업데이트된 게시글 정보 조회
@@ -51,7 +26,7 @@ router.post('/like', authenticateToken, async (req, res) => {
       data: {
         post_id: post_id,
         action: result.action,
-        current_like_count: updatedPost.post_like_count,
+        current_like_count: updatedPost?.post_like_count || 0,
         is_liked: result.action === 'liked'
       }
     });

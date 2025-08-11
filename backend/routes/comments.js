@@ -19,23 +19,7 @@ router.post('/', authenticateToken, async (req, res) => {
     const { post_id, comment_content } = req.body;
     const user_id = req.user.id;
 
-    // post_id 존재 여부 검증
-    if (!post_id) {
-      return res.status(HTTP_STATUS.BAD_REQUEST).json({
-        success: false,
-        message: '게시글 ID를 입력해주세요'
-      });
-    }
-
-    // post_id 형식 검증 (DB 작업 전에!)
-    if (!post_id.match(/^[0-9a-fA-F]{24}$/)) {
-      return res.status(HTTP_STATUS.BAD_REQUEST).json({
-        success: false,
-        message: '올바르지 않은 게시글 ID 형식입니다'
-      });
-    }
-
-    // 댓글 내용 검증
+    // 댓글 내용 검증만
     if (!comment_content || comment_content.trim() === '') {
       return res.status(HTTP_STATUS.BAD_REQUEST).json({
         success: false,
@@ -97,14 +81,6 @@ router.put('/:id', authenticateToken, async (req, res) => {
     const { comment_content } = req.body;
     const user_id = req.user.id;
 
-    // 댓글 ID 형식 검증
-    if (!comment_id.match(/^[0-9a-fA-F]{24}$/)) {
-      return res.status(HTTP_STATUS.BAD_REQUEST).json({
-        success: false,
-        message: '올바르지 않은 댓글 ID 형식입니다'
-      });
-    }
-
     // 댓글 내용 검증
     if (!comment_content || comment_content.trim() === '') {
       return res.status(HTTP_STATUS.BAD_REQUEST).json({
@@ -113,7 +89,7 @@ router.put('/:id', authenticateToken, async (req, res) => {
       });
     }
     
-    // 댓글 존재 여부 확인
+    // 댓글 조회 및 작성자 권한 확인
     const existing_comment = await Comment.findById(comment_id);
     if (!existing_comment) {
       return res.status(HTTP_STATUS.NOT_FOUND).json({
@@ -173,16 +149,8 @@ router.delete('/:id', authenticateToken, async (req, res) => {
   try {
     const comment_id = req.params.id;
     const user_id = req.user.id;
-
-    // MongoDB ObjectId 형식 검증
-    if (!comment_id.match(/^[0-9a-fA-F]{24}$/)) {
-      return res.status(HTTP_STATUS.BAD_REQUEST).json({
-        success: false,
-        message: '올바르지 않은 댓글 ID 형식입니다'
-      });
-    }
     
-    // 댓글 존재 여부 확인
+    // 댓글 조회 및 작성자 권한 확인
     const existing_comment = await Comment.findById(comment_id);
     if (!existing_comment) {
       return res.status(HTTP_STATUS.NOT_FOUND).json({
@@ -233,14 +201,6 @@ router.get('/', async (req, res) => {
     const page = parseInt(req.query.page) || 1;
     const limit = parseInt(req.query.limit) || 10;
     const skip = (page - 1) * limit;
-
-    // post_id 필수 검증
-    if (!post_id) {
-      return res.status(HTTP_STATUS.BAD_REQUEST).json({
-        success: false,
-        message: '게시글 ID를 입력해주세요'
-      });
-    }
 
     // 해당 게시글의 댓글 수 조회
     const total_comments = await Comment.countDocuments({ post_id });

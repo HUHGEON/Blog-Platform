@@ -174,14 +174,6 @@ router.get('/search', async (req, res) => {
       });
     }
 
-    // 검색어 길이 제한
-    if (search_query.length > 50) {
-      return res.status(HTTP_STATUS.BAD_REQUEST).json({
-        success: false,
-        message: '검색어는 50글자 이하로 입력해주세요'
-      });
-    }
-
     const page_number = parseInt(page) || 1;
     const limit_number = parseInt(limit) || 10;
     const skip = (page_number - 1) * limit_number;
@@ -244,14 +236,6 @@ router.get('/:id', async (req, res) => {
   try {
     const { id } = req.params;
 
-    // MongoDB ObjectId 형식 검증
-    if (!id.match(/^[0-9a-fA-F]{24}$/)) {
-      return res.status(HTTP_STATUS.BAD_REQUEST).json({
-        success: false,
-        message: '올바르지 않은 게시글 ID 형식입니다'
-      });
-    }
-
     // 게시글 조회 및 조회수 증가
     const post = await Post.findByIdAndUpdate(
       id,
@@ -296,14 +280,6 @@ router.put('/:id', authenticateToken, upload.single('image'), async (req, res) =
     const post_id = req.params.id;
     const { title, post_content, removeImage } = req.body;
     const user_id = req.user.id;
-
-    // MongoDB ObjectId 형식 검증
-    if (!post_id.match(/^[0-9a-fA-F]{24}$/)) {
-      return res.status(HTTP_STATUS.BAD_REQUEST).json({
-        success: false,
-        message: '올바르지 않은 게시글 ID 형식입니다'
-      });
-    }
 
     // 게시글 존재 여부 및 작성자 확인
     const existing_post = await Post.findById(post_id);
@@ -411,14 +387,6 @@ router.delete('/:id', authenticateToken, async (req, res) => {
     const post_id = req.params.id;
     const user_id = req.user.id;
 
-    // MongoDB ObjectId 형식 검증
-    if (!post_id.match(/^[0-9a-fA-F]{24}$/)) {
-      return res.status(HTTP_STATUS.BAD_REQUEST).json({
-        success: false,
-        message: '올바르지 않은 게시글 ID 형식입니다'
-      });
-    }
-
     // 게시글 존재 여부 및 작성자 확인
     const existing_post = await Post.findById(post_id);
     if (!existing_post) {
@@ -460,6 +428,5 @@ router.delete('/:id', authenticateToken, async (req, res) => {
     });
   }
 });
-
 
 export default router;
