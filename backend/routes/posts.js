@@ -54,7 +54,7 @@ router.post('/', authenticateToken, upload.single('image'), async (req, res) => 
 
     res.status(HTTP_STATUS.CREATED).json({
       success: true,
-      message: '게시글이 작성되었습니다',
+      message: '게시글이 등록되었습니다',
       data: {
         id: newPost._id,
         title: newPost.title,
@@ -159,11 +159,6 @@ router.get('/', async (req, res) => {
       message: '서버 오류가 발생했습니다'
     });
   }
-});
-
-// 🔥 테스트 라우터 추가
-router.get('/test', (req, res) => {
-  res.json({ message: 'TEST 성공!', timestamp: new Date() });
 });
 
 // 게시글 검색 API
