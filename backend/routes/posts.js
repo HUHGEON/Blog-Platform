@@ -1,6 +1,7 @@
 import express from 'express';
 import Post from '../models/Post.js';
 import User from '../models/User.js';
+import Like from '../models/Like.js';
 import { authenticateToken } from '../middlewares/auth.js';
 import { upload } from '../middlewares/upload.js';
 import HTTP_STATUS from '../constants/httpStatusCodes.js';
@@ -70,7 +71,7 @@ router.post('/', authenticateToken, upload.single('image'), async (req, res) => 
     if (error.message === '이미지 파일만 업로드 가능합니다') {
       return res.status(HTTP_STATUS.BAD_REQUEST).json({
         success: false,
-        message: '이미지 파일만 업로드 가능합니다 (jpg, jpeg, png, gif)'
+        message: '이미지 파일만 업로드 가능합니다 (jpg, jpeg, png)'
       });
     }
 
@@ -252,11 +253,18 @@ router.get('/:id', async (req, res) => {
       });
     }
 
+    // 사용자의 좋아요 상태 확인
+    let isLikedByUser = null;
+    if (req.user) {  // 로그인한 경우만
+      isLikedByUser = await Like.isLikedByUser(req.user.id, id);
+    }
+
     // 한국시간으로 포맷해서 전송
     const formatted_post = {
       ...post.toObject(),
       created_at_display: format_korean_time(post.post_create_at),
-      updated_at_display: post.post_update_at ? format_korean_time(post.post_update_at) : null
+      updated_at_display: post.post_update_at ? format_korean_time(post.post_update_at) : null,
+      is_liked_by_user: isLikedByUser  // 좋아요 상태 추가
     };
 
     res.status(HTTP_STATUS.OK).json({
