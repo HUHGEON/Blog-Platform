@@ -12,7 +12,9 @@ import './models/Like.js';
 // 라우터 import
 import authRoutes from './routes/auths.js';
 import postRoutes from './routes/posts.js';
+import commentRoutes from './routes/comments.js';
 import HTTP_STATUS from './constants/httpStatusCodes.js';
+
 
 dotenv.config();
 
@@ -36,6 +38,7 @@ mongoose.connect(process.env.MONGODB_URI)
 // 라우터 설정
 app.use('/api/auths', authRoutes);
 app.use('/api/posts', postRoutes);
+app.use('/api/comments', commentRoutes);
 
 app.get('/', (req, res) => {
   res.json({ 
