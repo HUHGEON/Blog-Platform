@@ -6,8 +6,8 @@ import HTTP_STATUS from '../constants/httpStatusCodes.js';
 
 const router = express.Router();
 
-// 좋아요 토글 (추가/취소)
-router.post('/toggle', authenticateToken, async (req, res) => {
+// 좋아요 (추가/취소)
+router.post('/', authenticateToken, async (req, res) => {
   try {
     const { post_id } = req.body;
     const user_id = req.user.id;
