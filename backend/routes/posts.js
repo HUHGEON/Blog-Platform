@@ -2,7 +2,7 @@ import express from 'express';
 import Post from '../models/Post.js';
 import User from '../models/User.js';
 import Like from '../models/Like.js';
-import { authenticateToken } from '../middlewares/auth.js';
+import { authenticateToken, optionalAuth } from '../middlewares/auth.js';
 import { upload } from '../middlewares/upload.js';
 import HTTP_STATUS from '../constants/httpStatusCodes.js';
 import moment from 'moment-timezone';
@@ -71,7 +71,7 @@ router.post('/', authenticateToken, upload.single('image'), async (req, res) => 
     if (error.message === '이미지 파일만 업로드 가능합니다') {
       return res.status(HTTP_STATUS.BAD_REQUEST).json({
         success: false,
-        message: '이미지 파일만 업로드 가능합니다 (jpg, jpeg, png)'
+        message: '이미지 파일만 업로드 가능합니다 (jpg, jpeg, png, gif)'
       });
     }
 
@@ -233,7 +233,7 @@ router.get('/search', async (req, res) => {
 });
 
 // 게시글 상세 조회
-router.get('/:id', async (req, res) => {
+router.get('/:id', optionalAuth, async (req, res) => {
   try {
     const { id } = req.params;
 
@@ -253,7 +253,7 @@ router.get('/:id', async (req, res) => {
       });
     }
 
-    // 사용자의 좋아요 상태 확인
+    // 로그인한 사용자의 좋아요 상태 확인 (선택적)
     let isLikedByUser = null;
     if (req.user) {  // 로그인한 경우만
       isLikedByUser = await Like.isLikedByUser(req.user.id, id);

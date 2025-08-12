@@ -13,6 +13,7 @@ import './models/Like.js';
 import authRoutes from './routes/auths.js';
 import postRoutes from './routes/posts.js';
 import commentRoutes from './routes/comments.js';
+import likeRoutes from './routes/likes.js';
 import HTTP_STATUS from './constants/httpStatusCodes.js';
 
 
@@ -39,6 +40,7 @@ mongoose.connect(process.env.MONGODB_URI)
 app.use('/api/auths', authRoutes);
 app.use('/api/posts', postRoutes);
 app.use('/api/comments', commentRoutes);
+app.use('/api/likes', likeRoutes);
 
 app.get('/', (req, res) => {
   res.json({ 
