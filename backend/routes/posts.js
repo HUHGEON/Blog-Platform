@@ -253,7 +253,7 @@ router.get('/:id', optionalAuth, async (req, res) => {
       });
     }
 
-    // 로그인한 사용자의 좋아요 상태 확인 (선택적)
+    // 사용자가 좋아요를 했는지 확인
     let isLikedByUser = null;
     if (req.user) {  // 로그인한 경우만
       isLikedByUser = await Like.isLikedByUser(req.user.id, id);
