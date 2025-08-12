@@ -26,7 +26,6 @@ router.post('/', authenticateToken, async (req, res) => {
       data: {
         post_id: post_id,
         action: result.action,
-        current_like_count: updatedPost?.post_like_count || 0,
         is_liked: result.action === 'liked'
       }
     });
