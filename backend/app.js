@@ -29,7 +29,7 @@ app.use(cors()); // CORS 허용
 app.use(express.json()); // JSON 파싱
 app.use(express.urlencoded({ extended: true })); // URL 인코딩
 
-// 정적 파일 제공 (업로드된 이미지 접근)
+// 업로드 이미지 접근
 app.use('/uploads', express.static('uploads'));
 
 // MongoDB 연결
