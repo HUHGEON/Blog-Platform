@@ -144,7 +144,7 @@ router.get('/following/:userId', async (req, res) => {
       });
     }
 
-    // 팔로잉 목록 조회 (페이지네이션 적용)
+    // 팔로잉 목록 조회
     const following = await User.findById(userId)
       .populate({
         path: 'following',
