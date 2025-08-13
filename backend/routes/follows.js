@@ -6,9 +6,10 @@ import HTTP_STATUS from '../constants/httpStatusCodes.js';
 const router = express.Router();
 
 // 팔로우/언팔로우 토글
-router.post('/:userId', authenticateToken, async (req, res) => {
+router.post('/', authenticateToken, async (req, res) => {
   try {
-    const { userId: follow_user_id } = req.params;
+    const { follow_user_id } = req.body;
+
     const user_id = req.user.id;
 
     // 현재 사용자 조회
@@ -18,7 +19,8 @@ router.post('/:userId', authenticateToken, async (req, res) => {
     const isFollowing = user.following.includes(follow_user_id);
 
     if (isFollowing) {
-      // 언팔로우
+
+      // 팔로우 취수
       await User.findByIdAndUpdate(user_id, {
         $pull: { following: follow_user_id },
         $inc: { following_count: -1 }
