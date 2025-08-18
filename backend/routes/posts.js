@@ -99,6 +99,96 @@ router.post('/', authenticateToken, upload.single('image'), async (req, res) => 
   }
 });
 
+// 팔로우한 사용자들의 피드 조회
+router.get('/following', authenticateToken, async (req, res) => {
+  try {
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 10;
+    const sort_by = req.query.sort || 'latest';
+    const skip = (page - 1) * limit;
+    const user_id = req.user.id;
+
+    // 현재 사용자가 팔로우하는 사용자들의 ID 조회
+    const user = await User.findById(user_id).select('following');
+
+    // 팔로우한 사용자가 없는 경우
+    if (!user.following || user.following.length === 0) {
+      return res.status(HTTP_STATUS.OK).json({
+        success: true,
+        message: '팔로우한 사용자가 없어 표시할 피드가 없습니다',
+        data: {
+          posts: [],
+          pagination: {
+            currentPage: page,
+            totalPages: 0,
+            totalPosts: 0,
+            limit,
+            hasNextPage: false,
+            hasPrevPage: false
+          }
+        }
+      });
+    }
+
+    // 팔로우한 사용자들의 게시글 총 개수 조회
+    const total_posts = await Post.countDocuments({
+      user_id: { $in: user.following }
+    });
+    const total_pages = Math.ceil(total_posts / limit);
+
+    // 정렬 옵션
+    const sort_options = {
+      latest: { post_create_at: -1 },
+      views: { post_view_count: -1, post_create_at: -1 },
+      likes: { post_like_count: -1, post_create_at: -1 },
+      comments: { post_comment_count: -1, post_create_at: -1 }
+    };
+
+    // 유효하지 않은 정렬 옵션 처리
+    const sort_option = sort_options[sort_by] || sort_options.latest;
+
+    // 팔로우한 사용자들의 게시글 조회
+    const posts = await Post.find({
+      user_id: { $in: user.following }
+    })
+      .populate('user_id', 'nickname')
+      .sort(sort_option)
+      .skip(skip)
+      .limit(limit)
+      .select('title post_like_count post_comment_count post_view_count post_create_at image_url');
+
+    // 한국시간으로 포맷해서 전송
+    const formatted_posts = posts.map(post => ({
+      ...post.toObject(),
+      created_at_display: format_korean_time(post.post_create_at)
+    }));
+
+    res.status(HTTP_STATUS.OK).json({
+      success: true,
+      message: '팔로우 피드 조회 성공',
+      data: {
+        posts: formatted_posts,
+        pagination: {
+          currentPage: page,
+          totalPages: total_pages,
+          totalPosts: total_posts,
+          limit,
+          hasNextPage: page < total_pages,
+          hasPrevPage: page > 1
+        },
+        sort: sort_by
+      }
+    });
+
+  } catch (error) {
+    console.error('팔로우 피드 조회 에러:', error);
+    res.status(HTTP_STATUS.INTERNAL_SERVER_ERROR).json({
+      success: false,
+      message: '서버 오류가 발생했습니다'
+    });
+  }
+});
+
 // 게시글 목록 조회
 router.get('/', async (req, res) => {
   try {
