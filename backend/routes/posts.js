@@ -115,7 +115,7 @@ router.get('/following', authenticateToken, async (req, res) => {
     if (!user.following || user.following.length === 0) {
       return res.status(HTTP_STATUS.OK).json({
         success: true,
-        message: '팔로우한 사용자가 없어 표시할 피드가 없습니다',
+        message: '팔로우한 사용자가 없습니다',
         data: {
           posts: [],
           pagination: {
