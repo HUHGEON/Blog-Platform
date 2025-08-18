@@ -11,7 +11,7 @@ const router = express.Router();
 
 // 한국 시간 24시간 형식 함수
 const format_korean_time = (date) => {
-  return moment(date).tz('Asia/Seoul').format('HH시 mm분 ss초');
+  return moment(date).tz('Asia/Seoul').format('YYYY년 MM월 DD일 HH시 mm분');
 };
 
 // 게시글 작성
@@ -100,7 +100,7 @@ router.post('/', authenticateToken, upload.single('image'), async (req, res) => 
 });
 
 // 팔로우한 사용자들의 피드 조회
-router.get('/following', authenticateToken, async (req, res) => {
+router.get('/feed', authenticateToken, async (req, res) => {
   try {
     const page = parseInt(req.query.page) || 1;
     const limit = parseInt(req.query.limit) || 10;
