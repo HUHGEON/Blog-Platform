@@ -46,6 +46,7 @@ app.use('/api/likes', likeRoutes);
 app.use('/api/follows', followRoutes);
 app.use('/api/users', userRoutes);
 
+
 app.get('/', (req, res) => {
   res.json({ 
     message: '블로그 플랫폼 서버가 실행중입니다!',
