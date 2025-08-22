@@ -15,6 +15,7 @@ import postRoutes from './routes/posts.js';
 import commentRoutes from './routes/comments.js';
 import likeRoutes from './routes/likes.js';
 import followRoutes from './routes/follows.js';
+import userRoutes from './routes/users.js';
 import HTTP_STATUS from './constants/httpStatusCodes.js';
 
 
@@ -43,6 +44,7 @@ app.use('/api/posts', postRoutes);
 app.use('/api/comments', commentRoutes);
 app.use('/api/likes', likeRoutes);
 app.use('/api/follows', followRoutes);
+app.use('/api/users', userRoutes);
 
 app.get('/', (req, res) => {
   res.json({ 
