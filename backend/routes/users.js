@@ -234,7 +234,7 @@ router.get('/:userId/followers', async (req, res) => {
     const limit = parseInt(req.query.limit) || 10;
     const lastId = req.query.lastId;
 
-    // 사용자 존재 확인 (followers_count 제거)
+    // 사용자 존재 확인
     const user = await User.findById(userId).select('nickname followers'); 
     if (!user) {
       return res.status(HTTP_STATUS.NOT_FOUND).json({
@@ -272,7 +272,6 @@ router.get('/:userId/followers', async (req, res) => {
         })),
         hasMore: hasMore,
         lastId: followersToReturn.length > 0 ? followersToReturn[followersToReturn.length - 1]._id : null,
-        // totalFollowers 및 pagination 객체 제거
         user: {
           id: user._id,
           nickname: user.nickname
@@ -296,7 +295,7 @@ router.get('/:userId/following', async (req, res) => {
     const limit = parseInt(req.query.limit) || 10;
     const lastId = req.query.lastId;
 
-    // 사용자 존재 확인 (following_count 제거)
+    // 사용자 존재 확인 
     const user = await User.findById(userId).select('nickname following');
     if (!user) {
       return res.status(HTTP_STATUS.NOT_FOUND).json({
@@ -333,7 +332,6 @@ router.get('/:userId/following', async (req, res) => {
         })),
         hasMore: hasMore,
         lastId: followingToReturn.length > 0 ? followingToReturn[followingToReturn.length - 1]._id : null,
-        // totalFollowing 및 pagination 객체 제거
         user: {
           id: user._id,
           nickname: user.nickname
