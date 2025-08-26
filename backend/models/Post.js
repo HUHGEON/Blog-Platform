@@ -43,19 +43,22 @@ const postSchema = new mongoose.Schema({
   image_url: {
     type: String,
     default: null
+  },
+  // 형태소 분석된 키워드를 저장 (유사한 글 추천용)
+  analyzed_keywords_text: {
+    type: String,
+    default: ''
   }
 }, {
   collection: 'posts'
 });
 
-postSchema.index({ 
-  title: 'text', 
-  post_content: 'text' 
+// 유사한 글 추천을 위한 단일 텍스트 인덱스 (analyzed_keywords_text에만 적용)
+// MongoDB는 컬렉션당 하나의 텍스트 인덱스만 허용
+postSchema.index({
+  analyzed_keywords_text: 'text'
 }, {
-  weights: {
-    title: 10,
-    post_content: 5
-  }
+  name: 'analyzedKeywordsTextIndex'
 });
 
 // 조회수 증가 메서드
