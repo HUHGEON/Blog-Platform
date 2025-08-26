@@ -4,6 +4,12 @@ import cors from 'cors';
 import helmet from 'helmet';
 import dotenv from 'dotenv';
 
+import './models/User.js';
+import './models/Post.js';
+import './models/Comment.js';
+import './models/Like.js';
+import './models/Message.js';
+
 // 라우터 import
 import authRoutes from './routes/auths.js';
 import postRoutes from './routes/posts.js';
@@ -41,7 +47,7 @@ app.use('/api/comments', commentRoutes);
 app.use('/api/likes', likeRoutes);
 app.use('/api/follows', followRoutes);
 app.use('/api/users', userRoutes);
-app.use('/api/messages', messageRoutes);
+app.use('/api/messages',messageRoutes);
 
 app.get('/', (req, res) => {
   res.json({ 

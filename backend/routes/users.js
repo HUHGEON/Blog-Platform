@@ -293,7 +293,7 @@ router.get('/:userId/following', async (req, res) => {
   try {
     const { userId } = req.params;
     const limit = parseInt(req.query.limit) || 10;
-    const lastId = req.query.lastId;
+    const lastId = req.query.lastId;    //mongoDB의 OBJECTID의 성질을 이용 늦게 만들어질 수록 숫자가 큼
 
     // 사용자 존재 확인 
     const user = await User.findById(userId).select('nickname following');
@@ -308,8 +308,8 @@ router.get('/:userId/following', async (req, res) => {
     
     if (lastId) {
       query._id = { 
-        $in: user.following || [],
-        $lt: new mongoose.Types.ObjectId(lastId) 
+        $in: user.following || [],                  //$in 하나라도 일치하면 추출
+        $lt: new mongoose.Types.ObjectId(lastId)    //$it 보다 작은 ID
       };
     }
 
