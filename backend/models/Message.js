@@ -1,12 +1,12 @@
 import mongoose from 'mongoose';
 
 const messageSchema = new mongoose.Schema({
-  sender: { 
+  sender: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'User',
     required: true
   },
-  receiver: { 
+  receiver: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'User',
     required: true
@@ -15,15 +15,15 @@ const messageSchema = new mongoose.Schema({
     type: String,
     required: [true, '쪽지 제목을 입력해 주세요'],
     trim: true,
-    maxlength: [100, '제목은 100글자 이하로 입력해 주세요']
+    maxlength: [20, '제목은 20글자 이하로 입력해 주세요']
   },
-  content: { 
+  content: { // 쪽지 내용
     type: String,
     required: [true, '쪽지 내용을 입력해 주세요'],
     trim: true,
-    maxlength: [500, '쪽지 내용은 500글자 이하로 입력해 주세요']
+    maxlength: [100, '쪽지 내용은 100글자 이하로 입력해 주세요']
   },
-  createdAt: { 
+  createdAt: { // 쪽지 생성 시간
     type: Date,
     default: Date.now,
     required: true
@@ -36,6 +36,7 @@ const messageSchema = new mongoose.Schema({
   collection: 'messages'
 });
 
+// 발신자 및 수신자별로 쪽지 조회 성능을 향상시키기 위한 인덱스
 messageSchema.index({ sender: 1, receiver: 1, createdAt: -1 });
 messageSchema.index({ receiver: 1, sender: 1, createdAt: -1 });
 
