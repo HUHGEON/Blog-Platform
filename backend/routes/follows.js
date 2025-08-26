@@ -20,7 +20,7 @@ router.post('/:userId', authenticateToken, async (req, res) => {
 
     if (isFollowing) {
 
-      // 팔로우 취수
+      // 팔로우 취소
       await User.findByIdAndUpdate(user_id, {
         $pull: { following: follow_user_id },
         $inc: { following_count: -1 }
