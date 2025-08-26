@@ -15,13 +15,13 @@ const messageSchema = new mongoose.Schema({
     type: String,
     required: [true, '쪽지 제목을 입력해 주세요'],
     trim: true,
-    maxlength: [100, '제목은 100글자 이하로 입력해 주세요']
+    maxlength: [20, '제목은 20글자 이하로 입력해 주세요']
   },
   content: { 
     type: String,
     required: [true, '쪽지 내용을 입력해 주세요'],
     trim: true,
-    maxlength: [500, '쪽지 내용은 500글자 이하로 입력해 주세요']
+    maxlength: [200, '쪽지 내용은 200글자 이하로 입력해 주세요']
   },
   createdAt: { 
     type: Date,
