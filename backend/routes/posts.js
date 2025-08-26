@@ -148,14 +148,14 @@ router.get('/feed', authenticateToken, async (req, res) => {
         },
         {
           $addFields: {
-            popularity: {
+            popularity_sum: {
               $add: ['$post_view_count', '$post_comment_count', '$post_like_count']
             }
           }
         },
         {
           $sort: {
-            popularity: -1,
+            popularit_sum: -1,
             post_create_at: -1
           }
         },
@@ -179,7 +179,7 @@ router.get('/feed', authenticateToken, async (req, res) => {
             post_comment_count: 1,
             post_view_count: 1,
             post_create_at: 1,
-            popularity: 1,
+            popularity_sum: 1,
             user_id: '$user_info._id',
             'user_id.nickname': '$user_info.nickname'
           }
@@ -249,7 +249,7 @@ router.get('/', async (req, res) => {
         // 1단계: 인기도 점수 계산 필드 추가
         {
           $addFields: {
-            popularity: {
+            popularity_sum: {
               $add: ['$post_view_count', '$post_comment_count', '$post_like_count']
             }
           }
@@ -257,7 +257,7 @@ router.get('/', async (req, res) => {
         // 2단계: 인기도 점수 기준으로 정렬
         {
           $sort: {
-            popularity: -1,
+            popularity_sum: -1,
             post_create_at: -1
           }
         },
@@ -282,7 +282,7 @@ router.get('/', async (req, res) => {
             post_comment_count: 1,
             post_view_count: 1,
             post_create_at: 1,
-            popularity: 1,
+            popularity_sum: 1,
             user_id: '$user_info._id',
             'user_id.nickname': '$user_info.nickname'
           }
