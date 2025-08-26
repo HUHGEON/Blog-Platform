@@ -411,7 +411,7 @@ router.get('/:id', optionalAuth, async (req, res) => {
       { $inc: { post_view_count: 1 } },
       { new: true }
     )
-    .populate('user_id', 'nickname')
+    .populate('user_id', 'nickname profile_image_url')
     .select('title post_content post_like_count post_comment_count post_view_count post_create_at post_update_at image_url');
 
     if (!post) {
@@ -432,7 +432,12 @@ router.get('/:id', optionalAuth, async (req, res) => {
       ...post.toObject(),
       created_at_display: format_korean_time(post.post_create_at),
       updated_at_display: post.post_update_at ? format_korean_time(post.post_update_at) : null,
-      is_liked_by_user: isLikedByUser  // 좋아요 상태 추가
+      is_liked_by_user: isLikedByUser,  // 좋아요 상태 추가
+      user_id: {
+        _id: post.user_id._id,
+        nickname: post.user_id.nickname,
+        profile_image_url: post.user_id.profile_image_url
+      }
     };
 
     res.status(HTTP_STATUS.OK).json({
