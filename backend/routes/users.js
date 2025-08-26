@@ -68,7 +68,6 @@ router.get('/:userId/stats', async (req, res) => {
   try {
     const { userId } = req.params;
 
-    // 사용자 존재 확인
     const user = await User.findById(userId).select('user_post_count followers_count following_count');
     if (!user) {
       return res.status(HTTP_STATUS.NOT_FOUND).json({
@@ -77,53 +76,31 @@ router.get('/:userId/stats', async (req, res) => {
       });
     }
 
-    // 통계 정보 병렬 처리로 수집
-    const [totalComments, totalLikesReceived] = await Promise.all([
-      // 사용자가 작성한 댓글 수
+    const [commentsCount, likesResult] = await Promise.all([
       Comment.countDocuments({ user_id: userId }),
-      
-      // 사용자가 받은 좋아요 수 (사용자가 작성한 게시글들이 받은 좋아요)
       Like.aggregate([
-        {
-          $lookup: {
-            from: 'posts',
-            localField: 'post_id',
-            foreignField: '_id',
-            as: 'post'
-          }
-        },
-        {
-          $unwind: '$post'
-        },
-        {
-          $match: {
-            'post.user_id': new mongoose.Types.ObjectId(userId)
-          }
-        },
-        {
-          $count: 'total'
-        }
+        { $lookup: { from: 'posts', localField: 'post_id', foreignField: '_id', as: 'post' }},
+        { $unwind: '$post' },
+        { $match: { 'post.user_id': new mongoose.Types.ObjectId(userId) }},
+        { $count: 'total' }
       ])
     ]);
 
-    const likesReceived = totalLikesReceived[0]?.total || 0;
+    const likesCount = likesResult[0]?.total || 0;
 
     res.status(HTTP_STATUS.OK).json({
       success: true,
-      message: '사용자 통계 조회 성공',
       data: {
-        stats: {
-          total_posts: user.user_post_count,
-          total_comments: totalComments,
-          total_likes_received: likesReceived,
-          followers_count: user.followers_count,
-          following_count: user.following_count
-        }
+        postCount: user.user_post_count || 0,
+        followersCount: user.followers_count || 0,
+        followingCount: user.following_count || 0,
+        commentsCount,
+        likesReceivedCount: likesCount
       }
     });
 
   } catch (error) {
-    console.error('사용자 통계 조회 에러:', error);
+    console.error('사용자 통계 조회 오류:', error);
     res.status(HTTP_STATUS.INTERNAL_SERVER_ERROR).json({
       success: false,
       message: '서버 오류가 발생했습니다'
@@ -150,14 +127,23 @@ router.get('/:userId/posts', async (req, res) => {
     }
 
     // 정렬 옵션
-    const sort_options = {
-      latest: { post_create_at: -1 },
-      views: { post_view_count: -1, post_create_at: -1 },
-      likes: { post_like_count: -1, post_create_at: -1 },
-      comments: { post_comment_count: -1, post_create_at: -1 }
-    };
-
-    const sort_option = sort_options[sort_by];
+    let sort_option;
+    if (sort_by === 'popular') {
+      // 인기순: 조회수 + 좋아요 + 댓글 수의 합으로 정렬
+      sort_option = [
+        { 
+          $addFields: { 
+            popularity_score: { 
+              $add: ['$post_view_count', '$post_like_count', '$post_comment_count'] 
+            } 
+          } 
+        },
+        { $sort: { popularity_score: -1, post_create_at: -1 } }
+      ];
+    } else {
+      // 최신순 (기본값)
+      sort_option = { post_create_at: -1 };
+    }
 
     // 해당 사용자의 게시글 총 개수
     const total_posts = await Post.countDocuments({ user_id: userId });
