@@ -6,7 +6,7 @@ import { authenticateToken, optionalAuth } from '../middlewares/auth.js';
 import { upload } from '../middlewares/upload.js';
 import HTTP_STATUS from '../constants/httpStatusCodes.js';
 import moment from 'moment-timezone';
-
+import { extractNouns } from '../utils/koreanAnalyzer.js';
 const router = express.Router();
 
 // 한국 시간 24시간 형식 함수
@@ -38,12 +38,20 @@ router.post('/', authenticateToken, upload.single('image'), async (req, res) => 
       image_url = `/uploads/${req.file.filename}`;
     }
 
+    // 명사 및 영어 단어를 추출하여 analyzed_keywords_text 필드 생성
+    const analyzed_title_keywords = await extractNouns(title);
+    const analyzed_content_keywords = await extractNouns(post_content);
+
+    // 제목 키워드에 더 높은 가중치를 부여 -> 3번 반복
+    const analyzed_keywords_text = `${analyzed_title_keywords} ${analyzed_title_keywords} ${analyzed_title_keywords} ${analyzed_content_keywords}`;
+
     // 게시글 생성
     const new_post = new Post({
       user_id: user_id,
       title,
       post_content,
-      image_url: image_url
+      image_url: image_url,
+      analyzed_keywords_text: analyzed_keywords_text // 명사+영어 단어 기반 키워드 저장
     });
 
     await new_post.save();
@@ -155,7 +163,7 @@ router.get('/feed', authenticateToken, async (req, res) => {
         },
         {
           $sort: {
-            popularit_sum: -1,
+            popularity_sum: -1,
             post_create_at: -1
           }
         },
@@ -199,7 +207,7 @@ router.get('/feed', authenticateToken, async (req, res) => {
 
     // 한국시간으로 포맷해서 전송
     const formatted_posts = posts.map(post => ({
-      ...post,
+      ...post.toObject(),
       created_at_display: format_korean_time(post.post_create_at)
     }));
 
@@ -244,9 +252,7 @@ router.get('/', async (req, res) => {
     let posts;
 
     if (sort_by === 'popular') {
-      // 인기순 정렬 - 집계함수(aggregate) 사용
       posts = await Post.aggregate([
-        // 1단계: 인기도 점수 계산 필드 추가
         {
           $addFields: {
             popularity_sum: {
@@ -254,17 +260,14 @@ router.get('/', async (req, res) => {
             }
           }
         },
-        // 2단계: 인기도 점수 기준으로 정렬
         {
           $sort: {
             popularity_sum: -1,
             post_create_at: -1
           }
         },
-        // 3단계: 페이지네이션
         { $skip: skip },
         { $limit: limit },
-        // 4단계: User 컬렉션과 조인
         {
           $lookup: {
             from: 'users',
@@ -274,7 +277,6 @@ router.get('/', async (req, res) => {
           }
         },
         { $unwind: '$user_info' },
-        // 5단계: 필요한 필드만 선택
         {
           $project: {
             title: 1,
@@ -289,7 +291,7 @@ router.get('/', async (req, res) => {
         }
       ]);
     } else {
-      // 최신순 정렬 - 기존 find() 방식
+      // 최신순 정렬 
       posts = await Post.find()
         .populate('user_id', 'nickname')
         .sort({ post_create_at: -1 })
@@ -300,7 +302,7 @@ router.get('/', async (req, res) => {
 
     // 한국시간으로 포맷해서 전송
     const formatted_posts = posts.map(post => ({
-      ...post,
+      ...post.toObject(),
       created_at_display: format_korean_time(post.post_create_at)
     }));
 
@@ -330,12 +332,11 @@ router.get('/', async (req, res) => {
   }
 });
 
-// 게시글 검색 API
+// 게시글 검색 API -> 한 테이블에 $text는 하나만 가능해서 $regex 사용
 router.get('/search', async (req, res) => {
   try {
     const { q: search_query, page = 1, limit = 10 } = req.query;
 
-    // 검색어 검증
     if (!search_query || search_query.trim() === '') {
       return res.status(HTTP_STATUS.BAD_REQUEST).json({
         success: false,
@@ -347,28 +348,26 @@ router.get('/search', async (req, res) => {
     const limit_number = parseInt(limit) || 10;
     const skip = (page_number - 1) * limit_number;
 
-    // MongoDB 텍스트 검색
+    // $regex를 사용하여 title과 post_content 필드에서 검색
+    const regex_query = new RegExp(search_query.trim(), 'i');  //i -> 대소문자 구분 무시
+
     const search_filter = {
-      $text: {
-        $search: search_query.trim()
-      }
+      $or: [
+        { title: { $regex: regex_query } },
+        { post_content: { $regex: regex_query } }
+      ]
     };
 
-    // 검색 결과 총 개수
     const total_results = await Post.countDocuments(search_filter);
     const total_pages = Math.ceil(total_results / limit_number);
 
-    // 검색 결과 조회 (스코어 기준 정렬)
-    const posts = await Post.find(search_filter, {
-      score: { $meta: 'textScore' }
-    })
+    const posts = await Post.find(search_filter)
       .populate('user_id', 'nickname')
-      .sort({ score: { $meta: 'textScore' } })
+      .sort({ post_create_at: -1 }) 
       .skip(skip)
       .limit(limit_number)
       .select('title post_like_count post_comment_count post_view_count post_create_at'); 
 
-    // 한국시간으로 포맷해서 전송
     const formatted_posts = posts.map(post => ({
       ...post.toObject(),
       created_at_display: format_korean_time(post.post_create_at)
@@ -385,7 +384,7 @@ router.get('/search', async (req, res) => {
           totalResults: total_results,
           limit: limit_number,
           hasNextPage: page_number < total_pages,
-          hasPrevPage: page_number > 1
+          hasPrevPage: page > 1
         },
         searchQuery: search_query.trim()
       }
@@ -504,14 +503,19 @@ router.put('/:id', authenticateToken, upload.single('image'), async (req, res) =
       image_url = existing_post.image_url;
     }
 
-    // 게시글 수정
+    // 명사 및 영어 단어를 추출하여 analyzed_keywords_text 필드 업데이트
+    const analyzed_title_keywords = await extractNouns(title);
+    const analyzed_content_keywords = await extractNouns(post_content);
+    const analyzed_keywords_text = `${analyzed_title_keywords} ${analyzed_title_keywords} ${analyzed_title_keywords} ${analyzed_content_keywords}`; // 제목 가중치 부여
+
     const updated_post = await Post.findByIdAndUpdate(
       post_id,
       {
         title,
         post_content,
         image_url: image_url,
-        post_update_at: new Date()
+        post_update_at: new Date(),
+        analyzed_keywords_text: analyzed_keywords_text // 명사+영어 단어 기반 키워드 업데이트
       },
       { new: true }
     );
@@ -588,7 +592,6 @@ router.delete('/:id', authenticateToken, async (req, res) => {
     // 게시글 삭제
     await Post.findByIdAndDelete(post_id);
 
-    // 사용자의 게시글 수 감소
     await User.findByIdAndUpdate(user_id, {
       $inc: { user_post_count: -1 }
     });
@@ -603,6 +606,79 @@ router.delete('/:id', authenticateToken, async (req, res) => {
 
   } catch (error) {
     console.error('게시글 삭제 에러:', error);
+    res.status(HTTP_STATUS.INTERNAL_SERVER_ERROR).json({
+      success: false,
+      message: '서버 오류가 발생했습니다'
+    });
+  }
+});
+
+// 유사한 글 추천 -> 명사 기반 형태소 분석
+router.get('/:id/similar', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const limit = parseInt(req.query.limit) || 3;
+
+    const originalPost = await Post.findById(id).select('title post_content');
+    if (!originalPost) {
+      return res.status(HTTP_STATUS.NOT_FOUND).json({
+        success: false,
+        message: '원본 게시글을 찾을 수 없습니다'
+      });
+    }
+
+    const analyzed_original_title_keywords = await extractNouns(originalPost.title);
+    const analyzed_original_content_keywords = await extractNouns(originalPost.post_content);
+
+    // 제목 키워드에 더 높은 가중치를 부여하는 방식으로 검색 쿼리 구성
+    const search_query_text = `${analyzed_original_title_keywords} ${analyzed_original_title_keywords} ${analyzed_original_title_keywords} ${analyzed_original_content_keywords}`;
+
+    // 정제된 검색어가 너무 짧거나 없으면 추천 불가
+    if (!search_query_text.trim() || search_query_text.trim().length < 2) {
+        return res.status(HTTP_STATUS.OK).json({
+            success: true,
+            message: '유사한 글을 추천하기 위한 충분한 키워드를 찾을 수 없습니다.',
+            data: {
+                similar_posts: []
+            }
+        });
+    }
+
+    // MongoDB 텍스트 검색을 사용하여 유사한 게시글 조회
+    const similar_posts = await Post.find({
+      $text: {
+        $search: search_query_text // 명사+영어 단어 기반 쿼리 사용
+      },
+      _id: { $ne: id } // 원본 게시글은 결과에서 제외
+    }, {
+      score: { $meta: 'textScore' } // 텍스트 검색 유사도 점수 반환
+    })
+      .populate('user_id', 'nickname profile_image_url') // 작성자 정보 포함
+      .sort({ score: { $meta: 'textScore' }, post_create_at: -1 })
+      .limit(limit) 
+      .select('title post_content post_comment_count post_view_count post_create_at');
+
+    // 한국 시간으로 포맷해서 전송
+    const formatted_similar_posts = similar_posts.map(post => ({
+      ...post.toObject(),
+      created_at_display: format_korean_time(post.post_create_at),
+      user_id: {
+        _id: post.user_id._id,
+        nickname: post.user_id.nickname,
+        profile_image_url: post.user_id.profile_image_url
+      }
+    }));
+
+    res.status(HTTP_STATUS.OK).json({
+      success: true,
+      message: '유사 게시글 추천 성공',
+      data: {
+        similar_posts: formatted_similar_posts
+      }
+    });
+
+  } catch (error) {
+    console.error('유사 게시글 추천 에러:', error);
     res.status(HTTP_STATUS.INTERNAL_SERVER_ERROR).json({
       success: false,
       message: '서버 오류가 발생했습니다'
