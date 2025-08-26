@@ -20,9 +20,9 @@ router.get('/:userId', optionalAuth, async (req, res) => {
   try {
     const { userId } = req.params;
 
-    // 사용자 기본 정보 조회
+    // 사용자 기본 정보 조회 (profile_image_url 추가)
     const user = await User.findById(userId)
-      .select('nickname user_post_count followers_count following_count')
+      .select('nickname user_post_count followers_count following_count profile_image_url') // profile_image_url 추가
       .lean();
 
     if (!user) {
@@ -49,6 +49,7 @@ router.get('/:userId', optionalAuth, async (req, res) => {
           post_count: user.user_post_count,
           followers_count: user.followers_count,
           following_count: user.following_count,
+          profile_image_url: user.profile_image_url, // profile_image_url 추가
           is_following: req.user && req.user.id !== userId ? isFollowing : null
         }
       }
@@ -171,14 +172,15 @@ router.get('/:userId/posts', async (req, res) => {
             post_create_at: 1,
             popularity_sum: 1,
             user_id: '$user_info._id',
-            'user_id.nickname': '$user_info.nickname'
+            'user_id.nickname': '$user_info.nickname',
+            'user_id.profile_image_url': '$user_info.profile_image_url' // profile_image_url 추가
           }
         }
       ]);
     } else {
       // 최신순 정렬 
       posts = await Post.find({ user_id: userId })
-        .populate('user_id', 'nickname')
+        .populate('user_id', 'nickname profile_image_url') // profile_image_url 추가
         .sort({ post_create_at: -1 })
         .skip(skip)
         .limit(limit)
@@ -187,8 +189,16 @@ router.get('/:userId/posts', async (req, res) => {
 
     // 한국시간으로 포맷해서 전송
     const formatted_posts = posts.map(post => ({
-      ...post,
-      created_at_display: format_korean_time(post.post_create_at)
+      // Mongoose 쿼리 결과는 직접 post._doc으로 접근해야 할 수도 있습니다.
+      // aggregate 결과는 일반 객체이므로 직접 접근합니다.
+      ...(post._doc ? post._doc : post), // Mongoose 문서 또는 일반 객체 처리
+      created_at_display: format_korean_time(post.post_create_at),
+      // populate된 user_id 객체에서 profile_image_url을 가져오도록 수정
+      user_id: {
+        id: post.user_id._id || (post.user_id ? post.user_id.id : null), // aggregate 결과 처리
+        nickname: post.user_id.nickname,
+        profile_image_url: post.user_id.profile_image_url || (post.user_info ? post.user_info.profile_image_url : null) // aggregate 결과 처리
+      }
     }));
 
     res.status(HTTP_STATUS.OK).json({
@@ -214,6 +224,130 @@ router.get('/:userId/posts', async (req, res) => {
 
   } catch (error) {
     console.error('사용자 게시글 목록 조회 에러:', error);
+    res.status(HTTP_STATUS.INTERNAL_SERVER_ERROR).json({
+      success: false,
+      message: '서버 오류가 발생했습니다'
+    });
+  }
+});
+
+// 팔로워 목록 조회
+router.get('/:userId/followers', async (req, res) => {
+  try {
+    const { userId } = req.params;
+    const limit = parseInt(req.query.limit) || 20;
+    const lastId = req.query.lastId;
+
+    // 사용자 존재 확인
+    const user = await User.findById(userId).select('nickname followers_count');
+    if (!user) {
+      return res.status(HTTP_STATUS.NOT_FOUND).json({
+        success: false,
+        message: '존재하지 않는 사용자입니다'
+      });
+    }
+
+    // 팔로워 목록 조회 (커서 기반 페이지네이션) (profile_image_url 추가)
+    let query = { _id: { $in: user.followers || [] } };
+    
+    if (lastId) {
+      query._id = { 
+        $in: user.followers || [],
+        $lt: new mongoose.Types.ObjectId(lastId) 
+      };
+    }
+
+    const followers = await User.find(query)
+      .select('nickname profile_image_url') // 닉네임과 프로필 이미지 URL만 선택
+      .sort({ _id: -1 })
+      .limit(limit + 1);
+
+    const hasMore = followers.length > limit;
+    const followersToReturn = hasMore ? followers.slice(0, -1) : followers;
+
+    res.status(HTTP_STATUS.OK).json({
+      success: true,
+      message: '팔로워 목록 조회 성공',
+      data: {
+        followers: followersToReturn.map(follower => ({
+          id: follower._id,
+          nickname: follower.nickname,
+          profile_image_url: follower.profile_image_url // profile_image_url 추가
+        })),
+        hasMore: hasMore,
+        lastId: followersToReturn.length > 0 ? followersToReturn[followersToReturn.length - 1]._id : null,
+        totalFollowers: user.followers_count,
+        user: {
+          id: user._id,
+          nickname: user.nickname
+        }
+      }
+    });
+
+  } catch (error) {
+    console.error('팔로워 목록 조회 에러:', error);
+    res.status(HTTP_STATUS.INTERNAL_SERVER_ERROR).json({
+      success: false,
+      message: '서버 오류가 발생했습니다'
+    });
+  }
+});
+
+// 팔로잉 목록 조회 (무한 스크롤)
+router.get('/:userId/following', async (req, res) => {
+  try {
+    const { userId } = req.params;
+    const limit = parseInt(req.query.limit) || 20;
+    const lastId = req.query.lastId;
+
+    // 사용자 존재 확인
+    const user = await User.findById(userId).select('nickname following_count following');
+    if (!user) {
+      return res.status(HTTP_STATUS.NOT_FOUND).json({
+        success: false,
+        message: '존재하지 않는 사용자입니다'
+      });
+    }
+
+    // 팔로잉 목록 조회 (커서 기반 페이지네이션) (profile_image_url 추가)
+    let query = { _id: { $in: user.following || [] } };
+    
+    if (lastId) {
+      query._id = { 
+        $in: user.following || [],
+        $lt: new mongoose.Types.ObjectId(lastId) 
+      };
+    }
+
+    const following = await User.find(query)
+      .select('nickname profile_image_url') // 닉네임과 프로필 이미지 URL만 선택
+      .sort({ _id: -1 })
+      .limit(limit + 1);
+
+    const hasMore = following.length > limit;
+    const followingToReturn = hasMore ? following.slice(0, -1) : following;
+
+    res.status(HTTP_STATUS.OK).json({
+      success: true,
+      message: '팔로잉 목록 조회 성공',
+      data: {
+        following: followingToReturn.map(followingUser => ({
+          id: followingUser._id,
+          nickname: followingUser.nickname,
+          profile_image_url: followingUser.profile_image_url // profile_image_url 추가
+        })),
+        hasMore: hasMore,
+        lastId: followingToReturn.length > 0 ? followingToReturn[followingToReturn.length - 1]._id : null,
+        totalFollowing: user.following_count,
+        user: {
+          id: user._id,
+          nickname: user.nickname
+        }
+      }
+    });
+
+  } catch (error) {
+    console.error('팔로잉 목록 조회 에러:', error);
     res.status(HTTP_STATUS.INTERNAL_SERVER_ERROR).json({
       success: false,
       message: '서버 오류가 발생했습니다'
