@@ -76,6 +76,7 @@ router.get('/:userId/stats', async (req, res) => {
       });
     }
 
+    // 비동기 처리
     const [commentsCount, likesResult] = await Promise.all([
       Comment.countDocuments({ user_id: userId }),
       Like.aggregate([
@@ -108,7 +109,7 @@ router.get('/:userId/stats', async (req, res) => {
   }
 });
 
-// 사용자가 작성한 게시글 목록 조회 (정렬, 페이지네이션 포함)
+// 사용자가 작성한 게시글 목록 조회
 router.get('/:userId/posts', async (req, res) => {
   try {
     const { userId } = req.params;
@@ -126,40 +127,67 @@ router.get('/:userId/posts', async (req, res) => {
       });
     }
 
-    // 정렬 옵션
-    let sort_option;
-    if (sort_by === 'popular') {
-      // 인기순: 조회수 + 좋아요 + 댓글 수의 합으로 정렬
-      sort_option = [
-        { 
-          $addFields: { 
-            popularity_score: { 
-              $add: ['$post_view_count', '$post_like_count', '$post_comment_count'] 
-            } 
-          } 
-        },
-        { $sort: { popularity_score: -1, post_create_at: -1 } }
-      ];
-    } else {
-      // 최신순 (기본값)
-      sort_option = { post_create_at: -1 };
-    }
-
     // 해당 사용자의 게시글 총 개수
     const total_posts = await Post.countDocuments({ user_id: userId });
     const total_pages = Math.ceil(total_posts / limit);
 
-    // 해당 사용자의 게시글 조회
-    const posts = await Post.find({ user_id: userId })
-      .populate('user_id', 'nickname')
-      .sort(sort_option)
-      .skip(skip)
-      .limit(limit)
-      .select('title post_like_count post_comment_count post_view_count post_create_at image_url');
+    let posts;
+
+    if (sort_by === 'popular') {
+      posts = await Post.aggregate([
+        {
+          $match: { user_id: new mongoose.Types.ObjectId(userId) }
+        },
+        {
+          $addFields: {
+            popularity_sum: {
+              $add: ['$post_view_count', '$post_comment_count', '$post_like_count']
+            }
+          }
+        },
+        {
+          $sort: {
+            popularity_sum: -1,
+            post_create_at: -1
+          }
+        },
+        { $skip: skip },
+        { $limit: limit },
+        {
+          $lookup: {
+            from: 'users',
+            localField: 'user_id',
+            foreignField: '_id',
+            as: 'user_info'
+          }
+        },
+        { $unwind: '$user_info' },
+        {
+          $project: {
+            title: 1,
+            post_like_count: 1,
+            post_comment_count: 1,
+            post_view_count: 1,
+            post_create_at: 1,
+            popularity_sum: 1,
+            user_id: '$user_info._id',
+            'user_id.nickname': '$user_info.nickname'
+          }
+        }
+      ]);
+    } else {
+      // 최신순 정렬 
+      posts = await Post.find({ user_id: userId })
+        .populate('user_id', 'nickname')
+        .sort({ post_create_at: -1 })
+        .skip(skip)
+        .limit(limit)
+        .select('title post_like_count post_comment_count post_view_count post_create_at');
+    }
 
     // 한국시간으로 포맷해서 전송
     const formatted_posts = posts.map(post => ({
-      ...post.toObject(),
+      ...post,
       created_at_display: format_korean_time(post.post_create_at)
     }));
 
