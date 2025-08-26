@@ -71,7 +71,7 @@ router.post('/', authenticateToken, upload.single('image'), async (req, res) => 
     if (error.message === '이미지 파일만 업로드 가능합니다') {
       return res.status(HTTP_STATUS.BAD_REQUEST).json({
         success: false,
-        message: '이미지 파일만 업로드 가능합니다 (jpg, jpeg, png, gif)'
+        message: '이미지 파일만 업로드 가능합니다 (jpg, jpeg, png)'
       });
     }
 
@@ -136,30 +136,70 @@ router.get('/feed', authenticateToken, async (req, res) => {
     });
     const total_pages = Math.ceil(total_posts / limit);
 
-    // 정렬 옵션
-    const sort_options = {
-      latest: { post_create_at: -1 },
-      views: { post_view_count: -1, post_create_at: -1 },
-      likes: { post_like_count: -1, post_create_at: -1 },
-      comments: { post_comment_count: -1, post_create_at: -1 }
-    };
+    let posts;
 
-    // 유효하지 않은 정렬 옵션 처리
-    const sort_option = sort_options[sort_by] || sort_options.latest;
-
-    // 팔로우한 사용자들의 게시글 조회
-    const posts = await Post.find({
-      user_id: { $in: user.following }
-    })
-      .populate('user_id', 'nickname')
-      .sort(sort_option)
-      .skip(skip)
-      .limit(limit)
-      .select('title post_like_count post_comment_count post_view_count post_create_at image_url');
+    if (sort_by === 'popular') {
+      // 인기순 정렬 - 집계함수를 이용 ( 조회수 + 좋아요 수 + 댓글수)
+      posts = await Post.aggregate([
+        {
+          $match: {
+            user_id: { $in: user.following }
+          }
+        },
+        {
+          $addFields: {
+            popularity: {
+              $add: ['$post_view_count', '$post_comment_count', '$post_like_count']
+            }
+          }
+        },
+        {
+          $sort: {
+            popularity: -1,
+            post_create_at: -1
+          }
+        },
+        { $skip: skip },
+        { $limit: limit },
+        // User 테이블과 조인 -> 집계함수 파이프 라인안에서는 populate를 사용 못함 -> lookup을 사용
+        {
+          $lookup: {
+            from: 'users',
+            localField: 'user_id',
+            foreignField: '_id',
+            as: 'user_info'
+          }
+        },
+        { $unwind: '$user_info' },
+        // 필요한 필드만 선택 -> 1 선택 0 은 선택 x
+        {
+          $project: {
+            title: 1,
+            post_like_count: 1,
+            post_comment_count: 1,
+            post_view_count: 1,
+            post_create_at: 1,
+            popularity: 1,
+            user_id: '$user_info._id',
+            'user_id.nickname': '$user_info.nickname'
+          }
+        }
+      ]);
+    } else {
+      // 최신순 정렬
+      posts = await Post.find({
+        user_id: { $in: user.following }
+      })
+        .populate('user_id', 'nickname')
+        .sort({ post_create_at: -1 })
+        .skip(skip)
+        .limit(limit)
+        .select('title post_like_count post_comment_count post_view_count post_create_at');
+    }
 
     // 한국시간으로 포맷해서 전송
     const formatted_posts = posts.map(post => ({
-      ...post.toObject(),
+      ...post,
       created_at_display: format_korean_time(post.post_create_at)
     }));
 
@@ -197,32 +237,70 @@ router.get('/', async (req, res) => {
     const sort_by = req.query.sort || 'latest';
     const skip = (page - 1) * limit;
 
-    // 정렬 옵션
-    const sort_options = {
-      latest: { post_create_at: -1 },
-      views: { post_view_count: -1, post_create_at: -1 },
-      likes: { post_like_count: -1, post_create_at: -1 },
-      comments: { post_comment_count: -1, post_create_at: -1 }
-    };
-
-    // 유효하지 않은 정렬 옵션 처리
-    const sort_option = sort_options[sort_by] || sort_options.latest;
-
     // 전체 게시글 수 조회
     const total_posts = await Post.countDocuments();
     const total_pages = Math.ceil(total_posts / limit);
 
-    // 페이지네이션 + 정렬 적용된 게시글 조회
-    const posts = await Post.find()
-      .populate('user_id', 'nickname')
-      .sort(sort_option)
-      .skip(skip)
-      .limit(limit)
-      .select('title post_like_count post_comment_count post_view_count post_create_at image_url');
+    let posts;
+
+    if (sort_by === 'popular') {
+      // 인기순 정렬 - 집계함수(aggregate) 사용
+      posts = await Post.aggregate([
+        // 1단계: 인기도 점수 계산 필드 추가
+        {
+          $addFields: {
+            popularity: {
+              $add: ['$post_view_count', '$post_comment_count', '$post_like_count']
+            }
+          }
+        },
+        // 2단계: 인기도 점수 기준으로 정렬
+        {
+          $sort: {
+            popularity: -1,
+            post_create_at: -1
+          }
+        },
+        // 3단계: 페이지네이션
+        { $skip: skip },
+        { $limit: limit },
+        // 4단계: User 컬렉션과 조인
+        {
+          $lookup: {
+            from: 'users',
+            localField: 'user_id',
+            foreignField: '_id',
+            as: 'user_info'
+          }
+        },
+        { $unwind: '$user_info' },
+        // 5단계: 필요한 필드만 선택
+        {
+          $project: {
+            title: 1,
+            post_like_count: 1,
+            post_comment_count: 1,
+            post_view_count: 1,
+            post_create_at: 1,
+            popularity: 1,
+            user_id: '$user_info._id',
+            'user_id.nickname': '$user_info.nickname'
+          }
+        }
+      ]);
+    } else {
+      // 최신순 정렬 - 기존 find() 방식
+      posts = await Post.find()
+        .populate('user_id', 'nickname')
+        .sort({ post_create_at: -1 })
+        .skip(skip)
+        .limit(limit)
+        .select('title post_like_count post_comment_count post_view_count post_create_at');
+    }
 
     // 한국시간으로 포맷해서 전송
     const formatted_posts = posts.map(post => ({
-      ...post.toObject(),
+      ...post,
       created_at_display: format_korean_time(post.post_create_at)
     }));
 
