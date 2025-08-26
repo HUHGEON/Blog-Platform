@@ -208,7 +208,7 @@ router.get('/', async (req, res) => {
 
     // 페이지네이션 적용된 댓글 조회 (오래된 순)
     const comments = await Comment.find({ post_id })
-      .populate('user_id', 'nickname')
+      .populate('user_id', 'nickname profile_image_url')
       .sort({ comment_create_at: 1 })
       .skip(skip)
       .limit(limit)
@@ -218,7 +218,12 @@ router.get('/', async (req, res) => {
     const formatted_comments = comments.map(comment => ({
       ...comment.toObject(),
       created_at_display: format_korean_time(comment.comment_create_at),
-      updated_at_display: comment.comment_update_time ? format_korean_time(comment.comment_update_time) : null
+      updated_at_display: comment.comment_update_time ? format_korean_time(comment.comment_update_time) : null,
+      user_id: {
+        _id: comment.user_id._id,
+        nickname: comment.user_id.nickname,
+        profile_image_url: comment.user_id.profile_image_url
+      }
     }));
 
     res.status(HTTP_STATUS.OK).json({

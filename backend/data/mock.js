@@ -37,35 +37,41 @@ const generateMockData = async () => {
         pw: 'password123',
         name: '홍길동',
         nickname: '길동이',
-        birth_date: new Date('1990-01-01')
+        birth_date: new Date('1990-01-01'),
+        profile_image_url: null
+
       },
       {
         id: 'kim456', 
         pw: 'mypass456',
         name: '김철수',
         nickname: '철수야',
-        birth_date: new Date('1995-05-15')
+        birth_date: new Date('1995-05-15'),
+        profile_image_url: null
       },
       {
         id: 'lee789',
         pw: 'secret789', 
         name: '이영희',
         nickname: '영희짱',
-        birth_date: new Date('1992-12-25')
+        birth_date: new Date('1992-12-25'),
+        profile_image_url: null
       },
       {
         id: 'park012',
         pw: 'hello012',
         name: '박민수',
         nickname: '민수킹',
-        birth_date: new Date('1988-08-08')
+        birth_date: new Date('1988-08-08'),
+        profile_image_url: null
       },
       {
         id: 'choi345',
         pw: 'world345',
         name: '최지현',
         nickname: '지현이',
-        birth_date: new Date('1993-11-11')
+        birth_date: new Date('1993-11-11'),
+        profile_image_url: null
       }
     ]);
     console.log('👥 Mock 사용자 5명 생성 완료');

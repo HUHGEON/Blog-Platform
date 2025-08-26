@@ -89,6 +89,10 @@ const userSchema = new mongoose.Schema({
     type: Number,
     default: 0,
     min: 0
+  },
+   profile_image_url: {
+    type: String,
+    default: null
   }
 }, {
   collection: 'users'

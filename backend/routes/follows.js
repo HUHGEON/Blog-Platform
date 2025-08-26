@@ -8,8 +8,7 @@ const router = express.Router();
 // 팔로우/언팔로우 토글
 router.post('/:userId', authenticateToken, async (req, res) => {
   try {
-    const { follow_user_id } = req.body;
-
+    const { userId: follow_user_id } = req.params;
     const user_id = req.user.id;
 
     // 현재 사용자 조회

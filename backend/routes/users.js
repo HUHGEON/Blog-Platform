@@ -7,6 +7,7 @@ import Like from '../models/Like.js';
 import { authenticateToken, optionalAuth } from '../middlewares/auth.js';
 import HTTP_STATUS from '../constants/httpStatusCodes.js';
 import moment from 'moment-timezone';
+import { upload } from '../middlewares/upload.js'; 
 
 const router = express.Router();
 
@@ -20,9 +21,9 @@ router.get('/:userId', optionalAuth, async (req, res) => {
   try {
     const { userId } = req.params;
 
-    // 사용자 기본 정보 조회 (profile_image_url 추가)
+    // 사용자 기본 정보 조회
     const user = await User.findById(userId)
-      .select('nickname user_post_count followers_count following_count profile_image_url') // profile_image_url 추가
+      .select('nickname user_post_count followers_count following_count profile_image_url')
       .lean();
 
     if (!user) {
@@ -49,7 +50,7 @@ router.get('/:userId', optionalAuth, async (req, res) => {
           post_count: user.user_post_count,
           followers_count: user.followers_count,
           following_count: user.following_count,
-          profile_image_url: user.profile_image_url, // profile_image_url 추가
+          profile_image_url: user.profile_image_url,
           is_following: req.user && req.user.id !== userId ? isFollowing : null
         }
       }
@@ -172,32 +173,27 @@ router.get('/:userId/posts', async (req, res) => {
             post_create_at: 1,
             popularity_sum: 1,
             user_id: '$user_info._id',
-            'user_id.nickname': '$user_info.nickname',
-            'user_id.profile_image_url': '$user_info.profile_image_url' // profile_image_url 추가
+            'user_id.nickname': '$user_info.nickname'
           }
         }
       ]);
     } else {
-      // 최신순 정렬 
+      // 최신순 정렬
       posts = await Post.find({ user_id: userId })
-        .populate('user_id', 'nickname profile_image_url') // profile_image_url 추가
+        .populate('user_id', 'nickname')
         .sort({ post_create_at: -1 })
         .skip(skip)
         .limit(limit)
         .select('title post_like_count post_comment_count post_view_count post_create_at');
     }
 
-    // 한국시간으로 포맷해서 전송
+    // 인기순과 최신순의 데이터를 가져오는 방식이 달라서 필요
     const formatted_posts = posts.map(post => ({
-      // Mongoose 쿼리 결과는 직접 post._doc으로 접근해야 할 수도 있습니다.
-      // aggregate 결과는 일반 객체이므로 직접 접근합니다.
-      ...(post._doc ? post._doc : post), // Mongoose 문서 또는 일반 객체 처리
+      ...(post._doc ? post._doc : post),
       created_at_display: format_korean_time(post.post_create_at),
-      // populate된 user_id 객체에서 profile_image_url을 가져오도록 수정
       user_id: {
-        id: post.user_id._id || (post.user_id ? post.user_id.id : null), // aggregate 결과 처리
+        id: post.user_id._id || (post.user_id ? post.user_id.id : null),
         nickname: post.user_id.nickname,
-        profile_image_url: post.user_id.profile_image_url || (post.user_info ? post.user_info.profile_image_url : null) // aggregate 결과 처리
       }
     }));
 
@@ -235,11 +231,11 @@ router.get('/:userId/posts', async (req, res) => {
 router.get('/:userId/followers', async (req, res) => {
   try {
     const { userId } = req.params;
-    const limit = parseInt(req.query.limit) || 20;
+    const limit = parseInt(req.query.limit) || 10;
     const lastId = req.query.lastId;
 
-    // 사용자 존재 확인
-    const user = await User.findById(userId).select('nickname followers_count');
+    // 사용자 존재 확인 (followers_count 제거)
+    const user = await User.findById(userId).select('nickname followers'); 
     if (!user) {
       return res.status(HTTP_STATUS.NOT_FOUND).json({
         success: false,
@@ -247,7 +243,7 @@ router.get('/:userId/followers', async (req, res) => {
       });
     }
 
-    // 팔로워 목록 조회 (커서 기반 페이지네이션) (profile_image_url 추가)
+    // 팔로워 목록 조회 
     let query = { _id: { $in: user.followers || [] } };
     
     if (lastId) {
@@ -258,7 +254,7 @@ router.get('/:userId/followers', async (req, res) => {
     }
 
     const followers = await User.find(query)
-      .select('nickname profile_image_url') // 닉네임과 프로필 이미지 URL만 선택
+      .select('nickname profile_image_url')
       .sort({ _id: -1 })
       .limit(limit + 1);
 
@@ -272,11 +268,11 @@ router.get('/:userId/followers', async (req, res) => {
         followers: followersToReturn.map(follower => ({
           id: follower._id,
           nickname: follower.nickname,
-          profile_image_url: follower.profile_image_url // profile_image_url 추가
+          profile_image_url: follower.profile_image_url
         })),
         hasMore: hasMore,
         lastId: followersToReturn.length > 0 ? followersToReturn[followersToReturn.length - 1]._id : null,
-        totalFollowers: user.followers_count,
+        // totalFollowers 및 pagination 객체 제거
         user: {
           id: user._id,
           nickname: user.nickname
@@ -293,15 +289,15 @@ router.get('/:userId/followers', async (req, res) => {
   }
 });
 
-// 팔로잉 목록 조회 (무한 스크롤)
+// 팔로잉 목록 조회 (커서 기반)
 router.get('/:userId/following', async (req, res) => {
   try {
     const { userId } = req.params;
-    const limit = parseInt(req.query.limit) || 20;
+    const limit = parseInt(req.query.limit) || 10;
     const lastId = req.query.lastId;
 
-    // 사용자 존재 확인
-    const user = await User.findById(userId).select('nickname following_count following');
+    // 사용자 존재 확인 (following_count 제거)
+    const user = await User.findById(userId).select('nickname following');
     if (!user) {
       return res.status(HTTP_STATUS.NOT_FOUND).json({
         success: false,
@@ -309,7 +305,6 @@ router.get('/:userId/following', async (req, res) => {
       });
     }
 
-    // 팔로잉 목록 조회 (커서 기반 페이지네이션) (profile_image_url 추가)
     let query = { _id: { $in: user.following || [] } };
     
     if (lastId) {
@@ -320,7 +315,7 @@ router.get('/:userId/following', async (req, res) => {
     }
 
     const following = await User.find(query)
-      .select('nickname profile_image_url') // 닉네임과 프로필 이미지 URL만 선택
+      .select('nickname profile_image_url')
       .sort({ _id: -1 })
       .limit(limit + 1);
 
@@ -334,11 +329,11 @@ router.get('/:userId/following', async (req, res) => {
         following: followingToReturn.map(followingUser => ({
           id: followingUser._id,
           nickname: followingUser.nickname,
-          profile_image_url: followingUser.profile_image_url // profile_image_url 추가
+          profile_image_url: followingUser.profile_image_url
         })),
         hasMore: hasMore,
         lastId: followingToReturn.length > 0 ? followingToReturn[followingToReturn.length - 1]._id : null,
-        totalFollowing: user.following_count,
+        // totalFollowing 및 pagination 객체 제거
         user: {
           id: user._id,
           nickname: user.nickname
@@ -348,6 +343,105 @@ router.get('/:userId/following', async (req, res) => {
 
   } catch (error) {
     console.error('팔로잉 목록 조회 에러:', error);
+    res.status(HTTP_STATUS.INTERNAL_SERVER_ERROR).json({
+      success: false,
+      message: '서버 오류가 발생했습니다'
+    });
+  }
+});
+
+// 사용자 프로필 이미지 수정 (업로드)
+router.put('/:userId/profile/image', authenticateToken, upload.single('image'), async (req, res) => {
+  try {
+    const { userId } = req.params;
+    const user_id = req.user.id;
+
+    if (userId.toString() !== user_id.toString()) {
+      return res.status(HTTP_STATUS.FORBIDDEN).json({
+        success: false,
+        message: '본인의 프로필만 수정할 수 있습니다'
+      });
+    }
+    
+    if (!req.file) {
+      return res.status(HTTP_STATUS.BAD_REQUEST).json({
+        success: false,
+        message: '업로드할 이미지를 선택해주세요'
+      });
+    }
+
+    const image_url = `/uploads/${req.file.filename}`;
+    
+    const updated_user = await User.findByIdAndUpdate(
+      user_id,
+      { profile_image_url: image_url },
+      { new: true, runValidators: true }
+    );
+    
+    res.status(HTTP_STATUS.OK).json({
+      success: true,
+      message: '프로필 이미지가 성공적으로 업데이트되었습니다',
+      data: {
+        id: updated_user._id,
+        nickname: updated_user.nickname,
+        profile_image_url: updated_user.profile_image_url
+      }
+    });
+
+  } catch (error) {
+    if (error.message === '이미지 파일만 업로드 가능합니다') {
+      return res.status(HTTP_STATUS.BAD_REQUEST).json({
+        success: false,
+        message: '이미지 파일만 업로드 가능합니다 (jpg, jpeg, png)'
+      });
+    }
+
+    if (error.code === 'LIMIT_FILE_SIZE') {
+      return res.status(HTTP_STATUS.BAD_REQUEST).json({
+        success: false,
+        message: '이미지 크기는 5MB 이하여야 합니다'
+      });
+    }
+
+    console.error('프로필 이미지 업데이트 에러:', error);
+    res.status(HTTP_STATUS.INTERNAL_SERVER_ERROR).json({
+      success: false,
+      message: '서버 오류가 발생했습니다'
+    });
+  }
+});
+
+// 사용자 프로필 이미지 삭제
+router.delete('/:userId/profile/image', authenticateToken, async (req, res) => {
+  try {
+    const { userId } = req.params;
+    const user_id = req.user.id;
+
+    if (userId.toString() !== user_id.toString()) {
+      return res.status(HTTP_STATUS.FORBIDDEN).json({
+        success: false,
+        message: '본인의 프로필만 삭제할 수 있습니다'
+      });
+    }
+
+    const updated_user = await User.findByIdAndUpdate(
+      user_id,
+      { $unset: { profile_image_url: '' } },
+      { new: true }
+    );
+    
+    res.status(HTTP_STATUS.OK).json({
+      success: true,
+      message: '프로필 이미지가 삭제되었습니다',
+      data: {
+        id: updated_user._id,
+        nickname: updated_user.nickname,
+        profile_image_url: null
+      }
+    });
+
+  } catch (error) {
+    console.error('프로필 이미지 삭제 에러:', error);
     res.status(HTTP_STATUS.INTERNAL_SERVER_ERROR).json({
       success: false,
       message: '서버 오류가 발생했습니다'
