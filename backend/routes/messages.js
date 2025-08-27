@@ -53,7 +53,6 @@ router.post('/send', authenticateToken, async (req, res) => {
       data: newMessage
     });
   } catch (error) {
-    // Mongoose 유효성 검증 에러 처리
     if (error.name === 'ValidationError') {
       const messages = Object.values(error.errors).map(err => err.message);
       return res.status(HTTP_STATUS.BAD_REQUEST).json({
@@ -70,12 +69,12 @@ router.post('/send', authenticateToken, async (req, res) => {
   }
 });
 
-// 받은 편지함 목록 조회
+// 받은 편지함 목록 조회 
 router.get('/inbox', authenticateToken, async (req, res) => {
   try {
     const currentUserId = req.user.id;
     const page = parseInt(req.query.page) || 1;
-    const limit = parseInt(req.query.limit) || 10;
+    const limit = parseInt(req.query.limit) || 20;
     const skip = (page - 1) * limit;
 
     const totalMessages = await Message.countDocuments({ receiver: currentUserId });
@@ -120,7 +119,7 @@ router.get('/sent', authenticateToken, async (req, res) => {
   try {
     const currentUserId = req.user.id;
     const page = parseInt(req.query.page) || 1;
-    const limit = parseInt(req.query.limit) || 10;
+    const limit = parseInt(req.query.limit) || 20;
     const skip = (page - 1) * limit;
 
     const totalMessages = await Message.countDocuments({ sender: currentUserId });
@@ -160,21 +159,21 @@ router.get('/sent', authenticateToken, async (req, res) => {
   }
 });
 
-// 특정 쪽지 상세 조회 및 읽음 처리
+// 쪽지 상세 조회 및 읽음 처리
 router.get('/:messageId', authenticateToken, async (req, res) => {
   try {
     const { messageId } = req.params;
-    const message = await Message.findById(messageId)
-      .populate('sender', 'nickname profile_image_url')
-      .populate('receiver', 'nickname profile_image_url');
+
+    const message = await Message.findByIdAndUpdate(
+      messageId,
+      { isRead: true },
+      { new: true }
+    )
+    .populate('sender', 'nickname profile_image_url')
+    .populate('receiver', 'nickname profile_image_url');
 
     if (!message) {
       return res.status(HTTP_STATUS.NOT_FOUND).json({ success: false, message: '쪽지를 찾을 수 없습니다' });
-    }
-
-    if (message.receiver.toString() === req.user.id) {
-      message.isRead = true;
-      await message.save();
     }
 
     res.status(HTTP_STATUS.OK).json({ success: true, message: '쪽지 조회 성공', data: message });
@@ -230,7 +229,6 @@ router.post('/reply/:originalMessageId', authenticateToken, async (req, res) => 
     });
 
   } catch (error) {
-    // Mongoose 유효성 검증 에러 처리
     if (error.name === 'ValidationError') {
       const messages = Object.values(error.errors).map(err => err.message);
       return res.status(HTTP_STATUS.BAD_REQUEST).json({
