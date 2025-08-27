@@ -172,8 +172,10 @@ router.get('/:userId/posts', async (req, res) => {
             post_view_count: 1,
             post_create_at: 1,
             popularity_sum: 1,
-            user_id: '$user_info._id',
-            'user_id.nickname': '$user_info.nickname'
+            user_info: {
+              _id: '$user_info._id',
+              nickname: '$user_info.nickname'
+            }
           }
         }
       ]);
@@ -188,14 +190,20 @@ router.get('/:userId/posts', async (req, res) => {
     }
 
     // 인기순과 최신순의 데이터를 가져오는 방식이 달라서 필요
-    const formatted_posts = posts.map(post => ({
-      ...(post._doc ? post._doc : post),
-      created_at_display: format_korean_time(post.post_create_at),
-      user_id: {
-        id: post.user_id._id || (post.user_id ? post.user_id.id : null),
-        nickname: post.user_id.nickname,
-      }
-    }));
+    const formatted_posts = posts.map(post => {
+      const postObject = post.toObject ? post.toObject() : post;
+      return {
+          ...postObject,
+          created_at_display: format_korean_time(postObject.post_create_at),
+          user_id: postObject.user_id ? {
+            id: postObject.user_id._id,
+            nickname: postObject.user_id.nickname,
+          } : {
+            id: postObject.user_info._id,
+            nickname: postObject.user_info.nickname,
+          }
+      };
+    });
 
     res.status(HTTP_STATUS.OK).json({
       success: true,

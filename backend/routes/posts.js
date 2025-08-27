@@ -188,8 +188,10 @@ router.get('/feed', authenticateToken, async (req, res) => {
             post_view_count: 1,
             post_create_at: 1,
             popularity_sum: 1,
-            user_id: '$user_info._id',
-            'user_id.nickname': '$user_info.nickname'
+            user_info: {
+              _id: '$user_info._id',
+              nickname: '$user_info.nickname'
+            }
           }
         }
       ]);
@@ -206,10 +208,22 @@ router.get('/feed', authenticateToken, async (req, res) => {
     }
 
     // 한국시간으로 포맷해서 전송
-    const formatted_posts = posts.map(post => ({
-      ...post.toObject(),
-      created_at_display: format_korean_time(post.post_create_at)
-    }));
+    const formatted_posts = posts.map(post => {
+      const postObject = post.toObject ? post.toObject() : post;
+      return {
+          ...postObject,
+          user_id: postObject.user_id ? {
+            _id: postObject.user_id._id,
+            nickname: postObject.user_id.nickname,
+            profile_image_url: postObject.user_id.profile_image_url
+          } : {
+            _id: postObject.user_info._id,
+            nickname: postObject.user_info.nickname,
+            profile_image_url: postObject.user_info.profile_image_url
+          },
+          created_at_display: format_korean_time(postObject.post_create_at)
+      };
+    });
 
     res.status(HTTP_STATUS.OK).json({
       success: true,
@@ -285,8 +299,10 @@ router.get('/', async (req, res) => {
             post_view_count: 1,
             post_create_at: 1,
             popularity_sum: 1,
-            user_id: '$user_info._id',
-            'user_id.nickname': '$user_info.nickname'
+            user_info: {
+              _id: '$user_info._id',
+              nickname: '$user_info.nickname'
+            }
           }
         }
       ]);
@@ -301,10 +317,20 @@ router.get('/', async (req, res) => {
     }
 
     // 한국시간으로 포맷해서 전송
-    const formatted_posts = posts.map(post => ({
-      ...post.toObject(),
-      created_at_display: format_korean_time(post.post_create_at)
-    }));
+    const formatted_posts = posts.map(post => {
+      const postObject = post.toObject ? post.toObject() : post;
+      return {
+          ...postObject,
+          user_id: postObject.user_id ? {
+            _id: postObject.user_id._id,
+            nickname: postObject.user_id.nickname,
+          } : {
+            _id: postObject.user_info._id,
+            nickname: postObject.user_info.nickname,
+          },
+          created_at_display: format_korean_time(postObject.post_create_at)
+      };
+    });
 
     res.status(HTTP_STATUS.OK).json({
       success: true,
