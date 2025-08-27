@@ -32,6 +32,6 @@ const storySchema = new mongoose.Schema({
   collection: 'stories'
 });
 
-storySchema.index({ createdAt: 1 }, { expireAfterSeconds: 86400 });
+storySchema.index({ createdAt: 1 }, { expireAfterSeconds: 86400 });   //24시간이 지나면 자동 삭제
 
 export default mongoose.model('Story', storySchema);
