@@ -1,13 +1,12 @@
 import mongoose from 'mongoose';
 import dotenv from 'dotenv';
-import { extractNouns } from '../utils/koreanAnalyzer.js'; // 형태소 분석기 임포트
+import { extractNouns } from '../utils/koreanAnalyzer.js';
 
 // 모델들 import
 import User from '../models/User.js';
 import Post from '../models/Post.js';
 import Comment from '../models/Comment.js';
 import Like from '../models/Like.js';
-// import Story from '../models/Story.js'; // Story 모델 임포트 제거
 
 dotenv.config();
 
@@ -30,7 +29,6 @@ const generateMockData = async () => {
     await Post.deleteMany({});
     await Comment.deleteMany({});
     await Like.deleteMany({});
-    // await Story.deleteMany({}); // Story 데이터 삭제 코드 제거
     console.log('🗑️ 기존 데이터 삭제 완료');
 
     // Mock 사용자 생성
@@ -42,7 +40,6 @@ const generateMockData = async () => {
         nickname: '길동이',
         birth_date: new Date('1990-01-01'),
         profile_image_url: null
-
       },
       {
         id: 'kim456', 
@@ -105,51 +102,50 @@ const generateMockData = async () => {
     console.log('👥 팔로우 관계 설정 완료');
 
     // Mock 게시글 생성
-    // 유사한 글 추천을 위한 그룹 1 (리액트)
-    const post_react_1 = {
-      user_id: mockUsers[0]._id,
-      title: '리액트 컴포넌트 설계에 대한 고찰',
-      post_content: '재사용 가능한 리액트 컴포넌트를 만드는 방법에 대해 깊이있게 논의합니다. 상태 관리를 효율적으로 하는 방법과 커스텀 훅의 활용.',
-      post_view_count: 245,
-      image_url: null
-    };
-
-    const post_react_2 = {
-      user_id: mockUsers[1]._id,
-      title: 'React와 상태 관리의 모든 것',
-      post_content: 'React에서 복잡한 애플리케이션의 상태를 효과적으로 관리하는 다양한 기법들을 살펴봅니다. Redux, Context API, Zustand 등의 라이브러리 비교.',
-      post_view_count: 189,
-      image_url: null
-    };
-    
-    // 유사한 글 추천을 위한 그룹 2 (MongoDB)
-    const post_mongodb_1 = {
-      user_id: mockUsers[2]._id,
-      title: 'MongoDB 스키마 설계 팁과 노하우',
-      post_content: 'MongoDB에서 효율적이고 확장 가능한 스키마를 설계하는 방법을 공유합니다. 관계형 데이터베이스와의 차이점, NoSQL의 장단점, 임베딩 vs 참조 방식의 선택 기준 등을 실제 예제와 함께 설명합니다.',
-      post_view_count: 156,
-      image_url: null
-    };
-    
-    const post_mongodb_2 = {
-      user_id: mockUsers[3]._id,
-      title: '노드JS와 MongoDB 연동하기',
-      post_content: 'Node.js 환경에서 MongoDB 데이터베이스를 연동하는 방법을 단계별로 설명합니다. Mongoose를 사용한 데이터 모델링과 CRUD 연산 구현.',
-      post_view_count: 98,
-      image_url: null
-    };
-
     const mockPosts = [
-        post_react_1,
-        post_react_2,
-        post_mongodb_1,
-        post_mongodb_2,
+      // 시간표 관련 게시글 그룹
+      {
+        user_id: mockUsers[0]._id,
+        title: '이번 학기 시간표 너무 빡빡하다',
+        post_content: '월요일 오전부터 풀강이라니... 역시 공강은 없다. 다들 시간표 어떻게 짜셨나요?',
+        post_view_count: 50,
+        image_url: null
+      },
+      {
+        user_id: mockUsers[1]._id,
+        title: '시간표짜기 팁 공유',
+        post_content: '성공적인 시간표를 짜는 나만의 팁을 공유합니다! 공강을 만드는 것이 핵심이죠.',
+        post_view_count: 120,
+        image_url: null
+      },
+      {
+        user_id: mockUsers[2]._id,
+        title: '대학생 시간표 추천해주세요',
+        post_content: '복학 준비중인 대학생입니다. 꿀강의 위주로 시간표 추천 좀 부탁드려요.',
+        post_view_count: 80,
+        image_url: null
+      },
+      // 과자 관련 게시글 그룹
+      {
+        user_id: mockUsers[3]._id,
+        title: '요즘 핫한 신상 과자 후기',
+        post_content: '바삭한 식감이 너무 좋은 신상 과자를 발견했어요! 다들 간식으로 한번 드셔보세요.',
+        post_view_count: 210,
+        image_url: null
+      },
       {
         user_id: mockUsers[4]._id,
-        title: 'CSS Grid와 Flexbox 마스터하기',
-        post_content: '모던 CSS 레이아웃의 핵심인 Grid와 Flexbox를 완전히 마스터해보겠습니다. 언제 Grid를 사용하고 언제 Flexbox를 사용해야 하는지, 각각의 장단점과 사용 사례를 실제 예제와 함께 설명합니다. 반응형 웹 디자인을 위한 실용적인 패턴들도 포함되어 있습니다.',
-        post_view_count: 234,
-        image_url: 'http://localhost:5001/uploads/css-grid-flexbox.png'
+        title: '맛있는 스낵 추천좀',
+        post_content: '스트레스 받을 때 먹을만한 맛있는 초콜릿이나 스낵 추천 부탁드립니다. 단짠단짠한 과자 환영!',
+        post_view_count: 150,
+        image_url: null
+      },
+      {
+        user_id: mockUsers[0]._id,
+        title: '추억의 초콜릿 과자',
+        post_content: '옛날에 먹던 추억의 과자 초콜릿 맛이 생각나네요. 단종된 건지 요즘은 안보여요 ㅠㅠ',
+        post_view_count: 95,
+        image_url: null
       }
     ];
 
@@ -157,35 +153,36 @@ const generateMockData = async () => {
     for (const post of mockPosts) {
       const analyzed_title = await extractNouns(post.title);
       const analyzed_content = await extractNouns(post.post_content);
-      post.analyzed_keywords_text = `${analyzed_title} ${analyzed_title} ${analyzed_title} ${analyzed_content}`;
+      post.analyzed_keywords_text = `${analyzed_title} ${analyzed_title} ${analyzed_content}`;
     }
 
-    await Post.create(mockPosts);
-    console.log('📝 Mock 게시글 5개 생성 완료');
+    const createdPosts = await Post.create(mockPosts);
+    console.log('📝 Mock 게시글 6개 생성 완료');
 
     // Mock 댓글 생성
-    const mockComments = await Comment.create([
+    await Comment.create([
       {
         user_id: mockUsers[1]._id,
-        post_id: mockPosts[0]._id, // 리액트 게시글에 댓글
-        comment_content: '리액트 컴포넌트 구조화에 많은 도움이 됐습니다.'
+        post_id: createdPosts[0]._id, 
+        comment_content: '저도 시간표 빡빡한데 힘내세요!'
       },
       {
-        user_id: mockUsers[0]._id,
-        post_id: mockPosts[2]._id, // MongoDB 게시글에 댓글
-        comment_content: 'MongoDB 스키마 설계 팁이 유용하네요.'
+        user_id: mockUsers[3]._id,
+        post_id: createdPosts[3]._id,
+        comment_content: '그 과자 저도 먹어봤는데 진짜 맛있어요!'
       }
     ]);
     console.log('💬 Mock 댓글 2개 생성 완료');
 
-    // Mock 좋아요 생성 (토글 기능 사용)
+    // Mock 좋아요 생성
     const likePromises = [
-      Like.toggleLike(mockUsers[1]._id, mockPosts[0]._id),
-      Like.toggleLike(mockUsers[2]._id, mockPosts[0]._id),
-      Like.toggleLike(mockUsers[0]._id, mockPosts[1]._id)
+      Like.toggleLike(mockUsers[2]._id, createdPosts[0]._id),
+      Like.toggleLike(mockUsers[4]._id, createdPosts[0]._id),
+      Like.toggleLike(mockUsers[1]._id, createdPosts[3]._id),
+      Like.toggleLike(mockUsers[2]._id, createdPosts[3]._id)
     ];
     await Promise.all(likePromises);
-    console.log('❤️ Mock 좋아요 3개 생성 완료');
+    console.log('❤️ Mock 좋아요 4개 생성 완료');
     
     console.log('🎉 모든 Mock 데이터 생성 완료!');
 
@@ -213,15 +210,14 @@ const runMockData = async () => {
   const commentCount = await Comment.countDocuments();
   const likeCount = await Like.countDocuments();
   
-  // 통계 확인
-  const usersWithStats = await User.find({}, 'id nickname user_post_count user_comment_count user_like_count followers_count following_count');
-  const postsWithStats = await Post.find({}, 'title post_view_count post_comment_count post_like_count').populate('user_id', 'nickname');
-  
   console.log('\n📊 생성된 Mock 데이터 현황:');
   console.log(`- 사용자: ${userCount}명`);
   console.log(`- 게시글: ${postCount}개`);
   console.log(`- 댓글: ${commentCount}개`);
   console.log(`- 좋아요: ${likeCount}개`);
+  
+  const usersWithStats = await User.find({}, 'id nickname user_post_count user_comment_count user_like_count followers_count following_count');
+  const postsWithStats = await Post.find({}, 'title post_view_count post_comment_count post_like_count').populate('user_id', 'nickname');
   
   console.log('\n👥 사용자별 통계:');
   usersWithStats.forEach(user => {
