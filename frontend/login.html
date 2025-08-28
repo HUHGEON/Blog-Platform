@@ -395,6 +395,7 @@
                         localStorage.setItem('accessToken', result.data.tokens.accessToken);
                         localStorage.setItem('refreshToken', result.data.tokens.refreshToken);
                         localStorage.setItem('userNickname', result.data.user.nickname);
+                        localStorage.setItem('userId', result.data.user._id);
                         
                         window.location.href = '/'; 
                     } else {
