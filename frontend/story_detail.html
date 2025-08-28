@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>메인 - Blog</title>
+    <title>스토리 상세 - Blog</title>
     <style>
         /* Figma 색상 팔레트 */
         :root {
@@ -91,13 +91,13 @@
             color: #3498db;
         }
         .header-nav-item:hover svg {
-            fill: #3498db; /* 호버 시 SVG 색상 변경 */
+            fill: #3498db;
         }
         
         .header-search {
             flex-grow: 1;
-            max-width: 500px; /* 검색창 너비 조정 */
-            margin: 0 120px; /* 검색창 좌우 마진 조정 */
+            max-width: 500px;
+            margin: 0 120px;
             position: relative;
         }
         .header-search-container {
@@ -230,144 +230,103 @@
             max-width: 1200px;
             padding: 20px;
             box-sizing: border-box;
-        }
-        h2 {
-            font-size: 28px;
-            color: var(--color-black);
-            margin-bottom: 20px;
-            font-weight: normal;
-        }
-
-        /* 스토리 섹션 */
-        .stories-section {
-            display: none; /* 로그인 상태에 따라 JS로 토글 */
-            margin-bottom: 40px;
-            padding: 20px 0;
-            background-color: var(--color-white);
-            border-radius: 10px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
-        }
-        .stories-section h3 {
-            font-size: 20px;
-            margin-bottom: 15px;
-            color: var(--color-black);
-            padding: 0 20px;
-        }
-        .story-list {
-            display: flex;
-            align-items: center;
-            gap: 20px;
-            padding: 10px 20px;
-            overflow-x: auto; /* 스크롤 가능 */
-            -webkit-overflow-scrolling: touch; /* 모바일에서 부드러운 스크롤 */
-        }
-        .story-item {
-            flex-shrink: 0; /* 아이템이 줄어들지 않도록 */
-            cursor: pointer;
             display: flex;
             flex-direction: column;
             align-items: center;
-            text-decoration: none;
-            color: inherit;
         }
-        .story-circle {
-            width: 60px;
-            height: 60px;
-            border-radius: 50%;
-            border: 3px solid;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            overflow: hidden;
-            background-color: var(--color-very-light-gray); /* 프로필 이미지 없을 때 배경 */
-            transition: border-color 0.3s;
-        }
-        .story-circle.is-read {
-            border-color: var(--color-medium-gray);
-        }
-        .story-circle.is-unread {
-            border-image: linear-gradient(to bottom right, #833ab4 0%, #fd1d1d 50%, #fcb045 100%) 1;
-        }
-        .story-circle img {
-            width: 90%;
-            height: 90%;
-            border-radius: 50%;
-            object-fit: cover;
-        }
-        .story-item .add-story-icon {
-            width: 40px;
-            height: 40px;
-            fill: var(--color-dark-gray);
-        }
-        .story-item .nickname {
-            margin-top: 5px;
-            font-size: 12px;
-            color: #555;
-            white-space: nowrap; /* 닉네임 줄바꿈 방지 */
-            max-width: 70px; /* 닉네임 최대 너비 */
-            overflow: hidden;
-            text-overflow: ellipsis; /* 넘치면 ... */
-        }
-        
-        /* 인기글 리스트 */
-        .top10-list-container {
-            width: 100%;
+
+        /* 스토리 상세 섹션 */
+        .story-detail-section {
             background-color: var(--color-white);
             border-radius: 10px;
             box-shadow: 0 2px 10px rgba(0,0,0,0.05);
-            padding: 20px;
-            box-sizing: border-box;
-        }
-        .top10-list-container h3 {
-            font-size: 20px;
-            margin-bottom: 15px;
-            color: var(--color-black);
-        }
-        .post-table {
+            padding: 30px;
             width: 100%;
-            border-collapse: collapse;
-            text-align: left;
-            font-size: 14px;
+            max-width: 600px;
+            box-sizing: border-box;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
         }
-        .post-table th, .post-table td {
-            padding: 9px; /* 간격 더 좁게 조정 */
-            border-bottom: 1px solid var(--color-light-gray-1);
+        .story-info-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 15px;
         }
-        .post-table th {
-            background-color: var(--color-very-light-gray);
-            color: var(--color-dark-gray);
+        .story-author-info {
+            display: flex;
+            align-items: center;
+            gap: 10px;
         }
-        .post-table tbody tr:hover {
-            background-color: var(--color-very-light-gray);
+        .story-author-info .profile-icon {
+            width: 50px;
+            height: 50px;
+            background-color: var(--color-light-gray-1);
+            border-radius: 50%;
+            overflow: hidden;
+            flex-shrink: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
         }
-        .post-table a {
-            text-decoration: none;
-            color: var(--color-black);
+        .story-author-info .profile-icon img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            border-radius: 50%;
         }
-        .post-table .post-title {
-            font-weight: normal;
+        .story-author-info .nickname-time {
+            display: flex;
+            flex-direction: column;
         }
-        .post-table .post-count {
-            color: var(--color-dark-gray);
+        .story-author-info .nickname-time .nickname {
             font-weight: bold;
-            margin-left: 5px;
+            color: var(--color-black);
+            font-size: 16px;
         }
-        .post-table .post-author, .post-table .post-date, .post-table .post-views {
-            color: #777;
+        .story-author-info .nickname-time .time {
+            font-size: 12px;
+            color: var(--color-light-gray-2);
         }
-        /* 작성자, 작성일, 조회수 가운데 정렬 및 간격 조정 */
-        .post-table th:nth-child(2),
-        .post-table td:nth-child(2),
-        .post-table th:nth-child(3),
-        .post-table td:nth-child(3),
-        .post-table th:nth-child(4),
-        .post-table td:nth-child(4) {
+        
+        .story-content-container {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+        .story-image-wrapper {
+            max-width: 100%;
+            overflow: hidden;
+            border-radius: 8px;
+            display: flex;
+            justify-content: center;
+            background-color: var(--color-very-light-gray);
+            padding: 10px;
+        }
+        .story-image-wrapper img {
+            max-width: 100%;
+            height: auto;
+            display: block;
+            border-radius: 8px;
+        }
+        .story-text {
+            font-size: 16px;
+            line-height: 1.6;
+            color: var(--color-dark-gray);
+            white-space: pre-wrap;
+            word-wrap: break-word;
+            padding: 10px;
+            background-color: var(--color-very-light-gray);
+            border-radius: 8px;
+        }
+        .message-area {
+            height: 20px;
+            line-height: 20px;
+            margin-top: 10px;
+            color: #e74c3c;
+            font-size: 14px;
             text-align: center;
-            width: 9%; /* 간격 조정을 위해 너비 더 좁게 설정 */
-        }
-        .post-table th:nth-child(1),
-        .post-table td:nth-child(1) {
-            width: 73%; /* 제목 컬럼 너비 조정 (전체 100% - 9%*3) */
         }
     </style>
 </head>
@@ -430,55 +389,55 @@
     </div>
 
     <div class="main-container">
-        <div class="stories-section" id="storiesSection">
-            <h3>Story</h3>
-            <div class="story-list" id="storyList">
+        <div class="story-detail-section">
+            <div class="story-info-header">
+                <div class="story-author-info">
+                    <a href="#" id="authorProfileLink" class="profile-icon">
+                        <img id="authorProfileImage" src="https://placehold.co/50x50/d9d9d9/555555?text=P" alt="프로필 이미지">
+                    </a>
+                    <div class="nickname-time">
+                        <span id="authorNickname" class="nickname"></span>
+                        <span id="storyTime" class="time"></span>
+                    </div>
                 </div>
-        </div>
-
-        <div class="top10-list-container">
-            <h3>인기글 TOP 10</h3>
-            <table class="post-table">
-                <thead>
-                    <tr>
-                        <th>제목</th>
-                        <th style="text-align: center; width: 10%;">작성자</th>
-                        <th style="text-align: center; width: 10%;">작성일</th>
-                        <th style="text-align: center; width: 10%;">조회수</th>
-                    </tr>
-                </thead>
-                <tbody id="top10PostsTableBody">
-                    </tbody>
-            </table>
+            </div>
+            <div class="story-content-container">
+                <div id="storyImageWrapper" class="story-image-wrapper">
+                    </div>
+                <div id="storyContent" class="story-text"></div>
+            </div>
         </div>
     </div>
 
     <script>
-        // renderHeader 함수를 전역 범위로 이동
-        function renderHeader() {
+        document.addEventListener('DOMContentLoaded', async () => {
             const accessToken = localStorage.getItem('accessToken');
             const userId = localStorage.getItem('userId');
             const userNickname = localStorage.getItem('userNickname');
             const headerRight = document.getElementById('headerRight');
-            const storiesSection = document.getElementById('storiesSection');
+            const searchInput = document.getElementById('searchInput');
+            
+            const urlParams = new URLSearchParams(window.location.search);
+            const storyId = urlParams.get('storyId');
 
-            if (accessToken && userNickname) {
-                // 로그인 상태
-                headerRight.innerHTML = `
-                    <div class="logged-in-menu">
-                        <a href="/post_write.html" class="nav-item-logged-in">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 22 22" fill="none">
-                              <path d="M1.87076 21.5C1.46242 21.5972 1.10756 21.4951 0.806175 21.1938C0.504786 20.8924 0.402702 20.5375 0.499925 20.1292L1.66659 14.5583L7.44159 20.3333L1.87076 21.5ZM7.44159 20.3333L1.66659 14.5583L15.0249 1.20001C15.4721 0.752786 16.0263 0.529175 16.6874 0.529175C17.3485 0.529175 17.9027 0.752786 18.3499 1.20001L20.7999 3.65001C21.2471 4.09723 21.4708 4.6514 21.4708 5.31251C21.4708 5.97362 21.2471 6.52779 20.7999 6.97501L7.44159 20.3333ZM16.6874 2.83334L4.61242 14.9083L7.09159 17.3875L19.1666 5.31251L16.6874 2.83334Z" fill="#1C1B1F"/>
-                            </svg>
-                            글쓰기
-                        </a>
-                        <a href="/messages.html" class="nav-item-logged-in">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 28 28" fill="none">
-                              <mask id="mask0_4_38" style="mask-type:alpha" maskUnits="userSpaceOnUse" x="0" y="0" width="28" height="28">
-                                <rect width="28" height="28" fill="#D9D9D9"/>
-                              </mask>
-                              <g mask="url(#mask0_4_38)">
-                                <path d="M4.66659 23.3334C4.02492 23.3334 3.47561 23.1049 3.01867 22.6479C2.56172 22.191 2.33325 21.6417 2.33325 21V7.00002C2.33325 6.35835 2.56172 5.80905 3.01867 5.3521C3.47561 4.89516 4.02492 4.66669 4.66659 4.66669H23.3333C23.9749 4.66669 24.5242 4.89516 24.9812 5.3521C25.4381 5.80905 25.6666 6.35835 25.6666 7.00002V21C25.6666 21.6417 25.4381 22.191 24.9812 22.6479C24.5242 23.1049 23.9749 23.3334 23.3333 23.3334H4.66659ZM13.9999 15.1667L4.66659 9.33335V21H23.3333V9.33335L13.9999 15.1667ZM13.9999 12.8334L23.3333 7.00002H4.66659L13.9999 12.8334ZM4.66659 9.33335V7.00002V21V9.33335Z" fill="#1C1B1F"/>
+            // 상단바 렌더링
+            function renderHeader() {
+                if (accessToken && userNickname) {
+                    headerRight.innerHTML = `
+                        <div class="logged-in-menu">
+                            <a href="/post_write.html" class="nav-item-logged-in">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 22 22" fill="none">
+                                  <path d="M1.87076 21.5C1.46242 21.5972 1.10756 21.4951 0.806175 21.1938C0.504786 20.8924 0.402702 20.5375 0.499925 20.1292L1.66659 14.5583L7.44159 20.3333L1.87076 21.5ZM7.44159 20.3333L1.66659 14.5583L15.0249 1.20001C15.4721 0.752786 16.0263 0.529175 16.6874 0.529175C17.3485 0.529175 17.9027 0.752786 18.3499 1.20001L20.7999 3.65001C21.2471 4.09723 21.4708 4.6514 21.4708 5.31251C21.4708 5.97362 21.2471 6.52779 20.7999 6.97501L7.44159 20.3333ZM16.6874 2.83334L4.61242 14.9083L7.09159 17.3875L19.1666 5.31251L16.6874 2.83334Z" fill="#1C1B1F"/>
+                                </svg>
+                                글쓰기
+                            </a>
+                            <a href="/messages.html" class="nav-item-logged-in">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 28 28" fill="none">
+                                  <mask id="mask0_4_38" style="mask-type:alpha" maskUnits="userSpaceOnUse" x="0" y="0" width="28" height="28">
+                                    <rect width="28" height="28" fill="#D9D9D9"/>
+                                  </mask>
+                                  <g mask="url(#mask0_4_38)">
+                                    <path d="M4.66659 23.3334C4.02492 23.3334 3.47561 23.1049 3.01867 22.6479C2.56172 22.191 2.33325 21.6417 2.33325 21V7.00002C2.33325 6.35835 2.56172 5.80905 3.01867 5.3521C3.47561 4.89516 4.02492 4.66669 4.66659 4.66669H23.3333C23.9749 4.66669 24.5242 4.89516 24.9812 5.3521C25.4381 5.80905 25.6666 6.35835 25.6666 7.00002V21C25.6666 21.6417 25.4381 22.191 24.9812 22.6479C24.5242 23.1049 23.9749 23.3334 23.3333 23.3334H4.66659ZM13.9999 15.1667L4.66659 9.33335V21H23.3333V9.33335L13.9999 15.1667ZM13.9999 12.8334L23.3333 7.00002H4.66659L13.9999 12.8334ZM4.66659 9.33335V7.00002V21V9.33335Z" fill="#1C1B1F"/>
                               </g>
                             </svg>
                             쪽지
@@ -501,23 +460,15 @@
                         </a>
                     </div>
                 `;
-                storiesSection.style.display = 'block'; // 스토리 섹션 표시
-
-                // 로그아웃 버튼 이벤트 리스너
                 document.getElementById('logoutButton').addEventListener('click', (e) => {
                     e.preventDefault();
                     localStorage.removeItem('accessToken');
                     localStorage.removeItem('refreshToken');
                     localStorage.removeItem('userNickname');
                     localStorage.removeItem('userId');
-                    window.location.href = '/'; // 비로그인 메인으로 리디렉션
+                    window.location.href = '/';
                 });
-
-                // 팔로우한 사용자 스토리 불러오기
-                fetchStories();
-
             } else {
-                // 비로그인 상태
                 headerRight.innerHTML = `
                     <a href="/login.html" class="login-button-top">
                         <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 28 28" fill="none">
@@ -531,127 +482,59 @@
                         로그인
                     </a>
                 `;
-                storiesSection.style.display = 'none';
             }
-        }
-        
-        // 내 스토리와 팔로우한 사용자들의 스토리 불러오기
-        async function fetchStories() {
-            const accessToken = localStorage.getItem('accessToken');
-            const userId = localStorage.getItem('userId');
-            const userNickname = localStorage.getItem('userNickname');
-            const storyList = document.getElementById('storyList');
-            const storiesSection = document.getElementById('storiesSection');
-            
-            storyList.innerHTML = ''; // 기존 내용 초기화
-            
-            // 로그인 상태일 때만 스토리 섹션 표시
-            if (accessToken) {
-                storiesSection.style.display = 'block';
-                
-                // 스토리 추가 버튼을 항상 먼저 생성
-                const addStoryItem = document.createElement('a');
-                addStoryItem.href = `/story_create.html`;
-                addStoryItem.classList.add('story-item');
-                addStoryItem.innerHTML = `
-                    <div class="story-circle">
-                        <svg class="add-story-icon" xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                            <line x1="12" y1="5" x2="12" y2="19"></line>
-                            <line x1="5" y1="12" x2="19" y2="12"></line>
-                        </svg>
-                    </div>
-                    <span class="nickname">추가</span>
-                `;
-                storyList.appendChild(addStoryItem);
-
-                // 내 프로필 정보 불러오기
-                const myProfileResponse = await fetch(`http://localhost:5001/api/users/${userId}`, {
-                    headers: { 'Authorization': `Bearer ${accessToken}` }
-                });
-                const myProfileResult = myProfileResponse.ok ? await myProfileResponse.json() : null;
-                const myProfileImageUrl = myProfileResult?.data.user.profile_image_url ? `http://localhost:5001${myProfileResult.data.user.profile_image_url}` : 'https://placehold.co/60x60/d9d9d9/555555?text=P';
-
-                // 내 스토리 불러오기 (비동기)
-                const myStoriesPromise = fetch('http://localhost:5001/api/stories/my-stories', {
-                    headers: { 'Authorization': `Bearer ${accessToken}` }
-                }).then(res => res.json()).catch(() => ({ success: false, data: { my_stories: [] } }));
-                
-                // 팔로우한 사용자들의 스토리 불러오기 (비동기)
-                const followedStoriesPromise = fetch('http://localhost:5001/api/stories/feed', {
-                    headers: { 'Authorization': `Bearer ${accessToken}` }
-                }).then(res => res.json()).catch(() => ({ success: false, data: { stories: [] } }));
-                
-                const [myStoriesResult, followedStoriesResult] = await Promise.all([myStoriesPromise, followedStoriesPromise]);
-
-                const myStories = myStoriesResult.success ? myStoriesResult.data.my_stories : [];
-                const followedStories = followedStoriesResult.success ? followedStoriesResult.data.stories : [];
-
-                // 내 스토리 아이템 생성 (스토리가 있을 경우에만)
-                if (myStories.length > 0) {
-                    const myStoryItem = document.createElement('a');
-                    myStoryItem.href = `/story_detail.html?storyId=${myStories[0].id}`; // 내 스토리가 여러 개일 경우 가장 최신 스토리를 선택
-                    myStoryItem.classList.add('story-item');
-                    myStoryItem.innerHTML = `
-                        <div class="story-circle is-unread">
-                            <img src="${myProfileImageUrl}" alt="${userNickname} 프로필">
-                        </div>
-                        <span class="nickname">${userNickname}</span>
-                    `;
-                    storyList.appendChild(myStoryItem);
-                }
-
-                // 팔로우한 사용자 스토리 아이템 추가
-                followedStories.forEach(story => {
-                    const storyItem = document.createElement('a');
-                    storyItem.href = `/story_detail.html?storyId=${story.id}`;
-                    storyItem.classList.add('story-item');
-                    const profileImageUrl = story.user_info.profile_image_url ? `http://localhost:5001${story.user_info.profile_image_url}` : 'https://placehold.co/60x60/d9d9d9/555555?text=P';
-                    storyItem.innerHTML = `
-                        <div class="story-circle ${story.is_read ? 'is-read' : 'is-unread'}">
-                            <img src="${profileImageUrl}" alt="${story.user_info.nickname} 프로필">
-                        </div>
-                        <span class="nickname">${story.user_info.nickname}</span>
-                    `;
-                    storyList.appendChild(storyItem);
-                });
-            } else {
-                storiesSection.style.display = 'none';
-            }
-        }
-
-        // 인기글 TOP 10 불러오기 함수
-        async function fetchTop10Posts() {
-            const top10PostsTableBody = document.getElementById('top10PostsTableBody');
-            try {
-                const response = await fetch('http://localhost:5001/api/posts?sort=popular&limit=10');
-                const result = await response.json();
-
-                if (response.ok && result.data.posts.length > 0) {
-                    top10PostsTableBody.innerHTML = ''; // 기존 내용 초기화
-                    result.data.posts.forEach(post => {
-                        const row = document.createElement('tr');
-                        row.innerHTML = `
-                            <td><a href="/post_detail.html?id=${post._id}">${post.title}</a> <span class="post-count">[${post.post_comment_count}]</span></td>
-                            <td>${post.user_id.nickname}</td>
-                            <td>${post.created_at_display}</td>
-                            <td>${post.post_view_count}</td>
-                        `;
-                        top10PostsTableBody.appendChild(row);
-                    });
-                } else {
-                    top10PostsTableBody.innerHTML = `<tr><td colspan="4" style="text-align: center;">인기글이 없습니다.</td></tr>`;
-                }
-            } catch (error) {
-                console.error('인기글 불러오기 에러:', error);
-                top10PostsTableBody.innerHTML = `<tr><td colspan="4" style="text-align: center;">인기글을 불러오지 못했습니다.</td></tr>`;
-            }
-        }
-        
-        // DOMContentLoaded 이벤트 리스너를 사용하여 모든 요소 로딩 후 실행
-        document.addEventListener('DOMContentLoaded', async () => {
-            // 초기 로드 함수
             renderHeader();
-            fetchTop10Posts();
+
+            // 스토리 상세 정보 불러오기
+            async function fetchStoryDetail() {
+                try {
+                    if (!accessToken) {
+                        alert('로그인 후 스토리를 볼 수 있습니다.');
+                        window.location.href = '/login.html';
+                        return;
+                    }
+                    if (!storyId) {
+                        alert('스토리 ID가 필요합니다.');
+                        window.location.href = '/';
+                        return;
+                    }
+
+                    const response = await fetch(`http://localhost:5001/api/stories/${storyId}`, {
+                        headers: { 'Authorization': `Bearer ${accessToken}` }
+                    });
+                    const result = await response.json();
+
+                    if (response.ok && result.success) {
+                        const story = result.data;
+                        
+                        const profileImageUrl = story.user_info.profile_image_url ? `http://localhost:5001${story.user_info.profile_image_url}` : 'https://placehold.co/50x50/d9d9d9/555555?text=P';
+                        
+                        document.getElementById('authorProfileImage').src = profileImageUrl;
+                        document.getElementById('authorProfileLink').href = `/user_page.html?userId=${story.user_info.id}`;
+                        document.getElementById('authorNickname').textContent = story.user_info.nickname;
+                        document.getElementById('storyTime').textContent = story.created_at_display;
+                        
+                        document.getElementById('storyContent').textContent = story.content;
+                        
+                        if (story.image_url) {
+                            const storyImage = document.createElement('img');
+                            storyImage.src = `http://localhost:5001${story.image_url}`;
+                            storyImage.alt = '스토리 이미지';
+                            document.getElementById('storyImageWrapper').appendChild(storyImage);
+                        }
+                    } else {
+                        alert(result.message || '스토리를 불러오는 데 실패했습니다.');
+                        window.location.href = '/';
+                    }
+                } catch (error) {
+                    console.error('스토리 상세 정보 불러오기 에러:', error);
+                    alert('서버 오류로 스토리를 불러오지 못했습니다.');
+                    window.location.href = '/';
+                }
+            }
+            
+            // fetchStoryDetail 함수 호출 위치를 DOMContentLoaded 이벤트 리스너 내부로 이동
+            fetchStoryDetail();
             
             // 상단바 검색 기능
             const searchInput = document.getElementById('searchInput');
