@@ -210,21 +210,6 @@
             fill: var(--color-black);
             transition: fill 0.3s;
         }
-        .header-right .logout-button {
-            display: flex;
-            align-items: center;
-            cursor: pointer;
-            text-decoration: none;
-            color: var(--color-black);
-            gap: 5px;
-            font-size: 14px;
-        }
-        .header-right .logout-button:hover {
-            color: #3498db;
-        }
-        .header-right .logout-button:hover svg path {
-            fill: #3498db;
-        }
 
         /* 사용자 페이지 컨텐츠 */
         .main-container {
@@ -316,7 +301,7 @@
             display: flex;
             gap: 10px;
         }
-        .profile-actions button {
+        .profile-actions button, .profile-actions a {
             background-color: var(--color-dark-gray);
             color: var(--color-white);
             border: none;
@@ -325,9 +310,34 @@
             cursor: pointer;
             font-size: 14px;
             transition: background-color 0.3s;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 8px;
         }
-        .profile-actions button:hover {
+        .profile-actions button:hover, .profile-actions a:hover {
             background-color: var(--color-black);
+        }
+        
+        /* 팔로우 버튼 스타일 */
+        .follow-btn {
+            background-color: #3498db !important;
+        }
+        .follow-btn:hover {
+            background-color: #2980b9 !important;
+        }
+        .unfollow-btn {
+            background-color: #e74c3c !important;
+        }
+        .unfollow-btn:hover {
+            background-color: #c0392b !important;
+        }
+        
+        /* 쪽지 보내기 버튼 스타일 */
+        .message-btn svg {
+            width: 18px;
+            height: 18px;
+            fill: var(--color-white);
         }
 
         .user-posts-section {
@@ -431,7 +441,6 @@
             opacity: 0.5;
         }
 
-        /* 프로필 이미지 업로드 모달 */
         .modal {
             position: fixed;
             z-index: 1001;
@@ -454,29 +463,6 @@
             border-radius: 10px;
             box-shadow: 0 5px 15px rgba(0,0,0,0.3);
             text-align: center;
-        }
-        .close-btn {
-            color: #aaa;
-            float: right;
-            font-size: 28px;
-            font-weight: bold;
-            cursor: pointer;
-        }
-        .modal-content h2 {
-            font-size: 20px;
-            margin-top: 0;
-            margin-bottom: 20px;
-        }
-        .modal-content input[type="file"] {
-            margin-bottom: 15px;
-        }
-        .modal-content button {
-            padding: 10px 20px;
-            background-color: var(--color-dark-gray);
-            color: var(--color-white);
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
         }
     </style>
 </head>
@@ -533,8 +519,7 @@
                     <input type="text" id="searchInput" placeholder="검색...">
                 </div>
             </div>
-            <div class="header-right" id="headerRight">
-                </div>
+            <div class="header-right" id="headerRight"></div>
         </div>
     </div>
 
@@ -558,8 +543,7 @@
                     <span id="followerCount" class="stat-item clickable-stat"><i class="fas fa-user-friends fa-icon"></i> 팔로워 <span id="followerCountValue">0</span></span>
                     <span id="followingCount" class="stat-item clickable-stat"><i class="fas fa-users fa-icon"></i> 팔로잉 <span id="followingCountValue">0</span></span>
                 </div>
-                <div class="profile-actions" id="profileActions">
-                    </div>
+                <div class="profile-actions" id="profileActions"></div>
             </div>
         </section>
 
@@ -583,24 +567,10 @@
                         <th style="text-align: center;">조회수</th>
                     </tr>
                 </thead>
-                <tbody id="postsTableBody">
-                    </tbody>
+                <tbody id="postsTableBody"></tbody>
             </table>
-            <div id="pagination" class="pagination">
-                </div>
+            <div id="pagination" class="pagination"></div>
         </section>
-    </div>
-
-    <div id="deleteConfirmModal" class="modal">
-        <div class="modal-content">
-            <span class="close-btn" id="modalClose">&times;</span>
-            <h4 id="modalTitle">게시글 삭제</h4>
-            <p id="modalMessage">정말로 이 게시글을 삭제하시겠습니까? 삭제된 게시글은 복구할 수 없습니다.</p>
-            <div class="modal-buttons">
-                <button class="confirm-button" id="confirmDeleteButton">삭제</button>
-                <button class="cancel-button" id="cancelDeleteButton">취소</button>
-            </div>
-        </div>
     </div>
     
     <script>
@@ -621,7 +591,7 @@
 
             let currentPage = 1;
             let sortBy = 'latest';
-            let userPostsTotalCount = 0;
+            let currentUserData = null;
 
             const headerRight = document.getElementById('headerRight');
             const searchInput = document.getElementById('searchInput');
@@ -631,7 +601,6 @@
             const postCountInfoElement = document.getElementById('postCountInfo');
             const paginationContainer = document.getElementById('pagination');
             const profileImageMenu = document.getElementById('profileImageMenu');
-            const modal = document.getElementById('deleteConfirmModal');
 
             // 상단바 검색 기능
             if (searchInput) {
@@ -666,288 +635,340 @@
                                     </mask>
                                     <g mask="url(#mask0_4_38)">
                                         <path d="M4.66659 23.3334C4.02492 23.3334 3.47561 23.1049 3.01867 22.6479C2.56172 22.191 2.33325 21.6417 2.33325 21V7.00002C2.33325 6.35835 2.56172 5.80905 3.01867 5.3521C3.47561 4.89516 4.02492 4.66669 4.66659 4.66669H23.3333C23.9749 4.66669 24.5242 4.89516 24.9812 5.3521C25.4381 5.80905 25.6666 6.35835 25.6666 7.00002V21C25.6666 21.6417 25.4381 22.191 24.9812 22.6479C24.5242 23.1049 23.9749 23.3334 23.3333 23.3334H4.66659ZM13.9999 15.1667L4.66659 9.33335V21H23.3333V9.33335L13.9999 15.1667ZM13.9999 12.8334L23.3333 7.00002H4.66659L13.9999 12.8334ZM4.66659 9.33335V7.00002V21V9.33335Z" fill="#1C1B1F"/>
-                                </svg>
-                                쪽지
-                            </a>
-                            <a href="/user_page.html?id=${loggedInUserId}" class="user-profile-group">
-                                <div class="profile-icon">
-                                    <img src="https://placehold.co/30x30/d9d9d9/555555?text=P" alt="Profile">
-                                </div>
-                                <span>${userNickname}</span>
-                            </a>
-                            <a href="#" class="nav-item-logged-in" id="logoutButton">
-                                <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 28 28" fill="none">
-                                    <mask id="mask0_4_48" style="mask-type:alpha" maskUnits="userSpaceOnUse" x="0" y="0" width="28" height="28">
-                                        <rect width="28" height="28" fill="#D9D9D9"/>
-                                    </mask>
-                                    <g mask="url(#mask0_4_48)">
-                                        <path d="M5.83333 24.5C5.19167 24.5 4.64236 24.2715 4.18542 23.8146C3.72847 23.3576 3.5 22.8083 3.5 22.1667V5.83333C3.5 5.19167 3.72847 4.64236 4.18542 4.18542C4.64236 3.72847 5.19167 3.5 5.83333 3.5H14V5.83333H5.83333V22.1667H14V24.5H5.83333ZM18.6667 19.8333L17.0625 18.1417L20.0375 15.1667H10.5V12.8333H20.0375L17.0625 9.85833L18.6667 8.16667L24.5 14L18.6667 19.8333Z" fill="#1C1B1F"/>
-                                    </g>
-                                </svg>
-                            </a>
-                        </div>
-                    `;
-                    document.getElementById('logoutButton').addEventListener('click', () => {
+                                </g>
+                            </svg>
+                            쪽지
+                        </a>
+                        <a href="/user_page.html?userId=${loggedInUserId}" class="user-profile-group">
+                            <div class="profile-icon">
+                                <img src="https://placehold.co/30x30/d9d9d9/555555?text=P" alt="Profile">
+                            </div>
+                            <span>${userNickname}</span>
+                        </a>
+                        <a href="#" class="nav-item-logged-in" id="logoutButton">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 28 28" fill="none">
+                                <mask id="mask0_4_48" style="mask-type:alpha" maskUnits="userSpaceOnUse" x="0" y="0" width="28" height="28">
+                                    <rect width="28" height="28" fill="#D9D9D9"/>
+                                </mask>
+                                <g mask="url(#mask0_4_48)">
+                                    <path d="M5.83333 24.5C5.19167 24.5 4.64236 24.2715 4.18542 23.8146C3.72847 23.3576 3.5 22.8083 3.5 22.1667V5.83333C3.5 5.19167 3.72847 4.64236 4.18542 4.18542C4.64236 3.72847 5.19167 3.5 5.83333 3.5H14V5.83333H5.83333V22.1667H14V24.5H5.83333ZM18.6667 19.8333L17.0625 18.1417L20.0375 15.1667H10.5V12.8333H20.0375L17.0625 9.85833L18.6667 8.16667L24.5 14L18.6667 19.8333Z" fill="#1C1B1F"/>
+                                </g>
+                            </svg>
+                        </a>
+                    </div>
+                `;
+                
+                // 로그아웃 버튼 이벤트 리스너 추가
+                const logoutBtn = document.getElementById('logoutButton');
+                if (logoutBtn) {
+                    logoutBtn.addEventListener('click', (e) => {
+                        e.preventDefault();
                         localStorage.removeItem('accessToken');
                         localStorage.removeItem('refreshToken');
                         localStorage.removeItem('userNickname');
                         localStorage.removeItem('userId');
                         window.location.href = '/';
                     });
-                } else {
-                    headerRight.innerHTML = `
-                        <a href="/login.html" class="login-button-top">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 28 28" fill="none">
-                                <mask id="mask0_5_1257" style="mask-type:alpha" maskUnits="userSpaceOnUse" x="0" y="0" width="28" height="28">
-                                    <rect x="0.5" y="0.5" width="27" height="27" fill="#D9D9D9" stroke="white"/>
-                                </mask>
-                                <g mask="url(#mask0_5_1257)">
-                                    <path d="M13.9997 15.6667C15.2433 15.6667 16.4678 15.8132 17.6735 16.1052C18.8771 16.3967 20.0646 16.8345 21.236 17.4196H21.237C21.7179 17.6684 22.1033 18.027 22.3971 18.5056C22.6881 18.9796 22.8336 19.4968 22.8336 20.0671V22.8337H5.16666V20.0671L5.17349 19.8552C5.20532 19.3677 5.34852 18.9203 5.60318 18.5056C5.89698 18.0271 6.28152 17.6674 6.76236 17.4186C7.93399 16.8333 9.12199 16.3967 10.3258 16.1052C11.5316 15.8132 12.756 15.6667 13.9997 15.6667ZM13.9997 16.9997C12.8703 16.9997 11.7511 17.136 10.6432 17.4079C9.53547 17.6798 8.441 18.0872 7.36002 18.6276L7.35025 18.6325L7.34048 18.6384C7.08831 18.7785 6.88479 18.9758 6.73404 19.2224C6.57701 19.4793 6.49966 19.7653 6.49966 20.0671V21.4997H21.4997V20.0671C21.4997 19.7653 21.4233 19.4793 21.2663 19.2224C21.1156 18.9758 20.9119 18.7785 20.6598 18.6384L20.6501 18.6325L20.6403 18.6276L20.234 18.4313C19.2853 17.9876 18.3263 17.6458 17.3571 17.4079C16.2491 17.1359 15.1292 16.9997 13.9997 16.9997ZM13.9997 5.16669C15.1493 5.16669 16.1212 5.57043 16.942 6.3913C17.7629 7.21217 18.1667 8.18401 18.1667 9.33368C18.1666 10.4832 17.7628 11.4553 16.942 12.2761C16.1212 13.0967 15.1492 13.4997 13.9997 13.4997C12.8501 13.4996 11.8781 13.0969 11.0573 12.2761C10.2365 11.4553 9.83372 10.4832 9.83365 9.33368C9.83365 8.18416 10.2366 7.21210 11.0573 6.3913C11.8781 5.57050 12.8501 5.16676 13.9997 6.49969ZM13.9997 6.49969C13.2245 6.49977 12.5485 6.78195 11.9987 7.33173C11.4487 7.88169 11.1667 8.55835 11.1667 9.33368C11.1667 10.1089 11.4488 10.7848 11.9987 11.3347C12.5486 11.8845 13.2245 12.1666 13.9997 12.1667C14.775 12.1667 15.4517 11.8846 16.0016 11.3347C16.5514 10.7848 16.8336 10.1088 16.8336 9.33368C16.8336 8.55835 16.5516 7.88169 16.0016 7.33173C15.4517 6.78176 14.775 6.49969 13.9997 6.49969Z" fill="#1C1B1F" stroke="white"/>
-                                </g>
-                            </svg>
-                            로그인
-                        </a>
-                    `;
                 }
+            } else {
+                headerRight.innerHTML = `
+                    <a href="/login.html" class="login-button-top">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 28 28" fill="none">
+                            <mask id="mask0_5_1257" style="mask-type:alpha" maskUnits="userSpaceOnUse" x="0" y="0" width="28" height="28">
+                                <rect x="0.5" y="0.5" width="27" height="27" fill="#D9D9D9" stroke="white"/>
+                            </mask>
+                            <g mask="url(#mask0_5_1257)">
+                                <path d="M13.9997 15.6667C15.2433 15.6667 16.4678 15.8132 17.6735 16.1052C18.8771 16.3967 20.0646 16.8345 21.236 17.4196H21.237C21.7179 17.6684 22.1033 18.027 22.3971 18.5056C22.6881 18.9796 22.8336 19.4968 22.8336 20.0671V22.8337H5.16666V20.0671L5.17349 19.8552C5.20532 19.3677 5.34852 18.9203 5.60318 18.5056C5.89698 18.0271 6.28152 17.6674 6.76236 17.4186C7.93399 16.8333 9.12199 16.3967 10.3258 16.1052C11.5316 15.8132 12.756 15.6667 13.9997 15.6667ZM13.9997 16.9997C12.8703 16.9997 11.7511 17.136 10.6432 17.4079C9.53547 17.6798 8.441 18.0872 7.36002 18.6276L7.35025 18.6325L7.34048 18.6384C7.08831 18.7785 6.88479 18.9758 6.73404 19.2224C6.57701 19.4793 6.49966 19.7653 6.49966 20.0671V21.4997H21.4997V20.0671C21.4997 19.7653 21.4233 19.4793 21.2663 19.2224C21.1156 18.9758 20.9119 18.7785 20.6598 18.6384L20.6501 18.6325L20.6403 18.6276L20.234 18.4313C19.2853 17.9876 18.3263 17.6458 17.3571 17.4079C16.2491 17.1359 15.1292 16.9997 13.9997 16.9997ZM13.9997 5.16669C15.1493 5.16669 16.1212 5.57043 16.942 6.3913C17.7629 7.21217 18.1667 8.18401 18.1667 9.33368C18.1666 10.4832 17.7628 11.4553 16.942 12.2761C16.1212 13.0967 15.1492 13.4997 13.9997 13.4997C12.8501 13.4996 11.8781 13.0969 11.0573 12.2761C10.2365 11.4553 9.83372 10.4832 9.83365 9.33368C9.83365 8.18416 10.2366 7.21210 11.0573 6.3913C11.8781 5.57050 12.8501 5.16676 13.9997 6.49969ZM13.9997 6.49969C13.2245 6.49977 12.5485 6.78195 11.9987 7.33173C11.4487 7.88169 11.1667 8.55835 11.1667 9.33368C11.1667 10.1089 11.4488 10.7848 11.9987 11.3347C12.5486 11.8845 13.2245 12.1666 13.9997 12.1667C14.775 12.1667 15.4517 11.8846 16.0016 11.3347C16.5514 10.7848 16.8336 10.1088 16.8336 9.33368C16.8336 8.55835 16.5516 7.88169 16.0016 7.33173C15.4517 6.78176 14.775 6.49969 13.9997 6.49969Z" fill="#1C1B1F" stroke="white"/>
+                            </g>
+                        </svg>
+                        로그인
+                    </a>
+                `;
             }
-            renderHeader(); // 페이지 로드 시 상단바 렌더링
+        }
 
-            // 사용자 정보 및 통계 로드
-            const fetchUserData = async () => {
-                try {
-                    // API 호출 시 userId를 사용
-                    const response = await fetch(`http://localhost:5001/api/users/${userId}`);
-                    if (!response.ok) throw new Error('사용자 정보를 불러오지 못했습니다.');
-                    const userData = await response.json();
-                    
-                    const statsResponse = await fetch(`http://localhost:5001/api/users/${userId}/stats`);
-                    if (!statsResponse.ok) throw new Error('사용자 통계 정보를 불러오지 못했습니다.');
+        // 사용자 정보 및 통계 로드
+        const fetchUserData = async () => {
+            try {
+                const response = await fetch(`http://localhost:5001/api/users/${userId}`);
+                if (!response.ok) throw new Error('사용자 정보를 불러오지 못했습니다.');
+                const userData = await response.json();
+                currentUserData = userData.data.user;
+                
+                const statsResponse = await fetch(`http://localhost:5001/api/users/${userId}/stats`);
+                if (!statsResponse.ok) throw new Error('사용자 통계 정보를 불러오지 못했습니다.');
+                const statsData = await statsResponse.json();
+
+                document.getElementById('userNickname').textContent = userData.data.user.nickname;
+                postsAuthorNicknameElement.textContent = userData.data.user.nickname;
+                userProfileImageElement.src = userData.data.user.profile_image_url ? `http://localhost:5001${userData.data.user.profile_image_url}` : 'https://placehold.co/120x120/d9d9d9/555555?text=P';
+                document.getElementById('postCountValue').textContent = statsData.data.postCount;
+                document.getElementById('commentCountValue').textContent = statsData.data.commentsCount;
+                document.getElementById('likeCountValue').textContent = statsData.data.likesReceivedCount;
+                document.getElementById('followerCountValue').textContent = statsData.data.followersCount;
+                document.getElementById('followingCountValue').textContent = statsData.data.followingCount;
+
+                document.getElementById('followerCount').addEventListener('click', () => window.location.href = `/followers.html?userId=${userId}`);
+                document.getElementById('followingCount').addEventListener('click', () => window.location.href = `/following.html?userId=${userId}`);
+
+                renderProfileActions();
+
+            } catch (error) {
+                console.error('사용자 정보 로드 실패:', error);
+                alert('사용자 정보를 불러오는 데 실패했습니다.');
+            }
+        };
+        
+        // 상호작용 버튼 렌더링
+        const renderProfileActions = () => {
+            const profileActions = document.getElementById('profileActions');
+            profileActions.innerHTML = '';
+        
+            if (isOwner) {
+                userProfileImageElement.style.cursor = 'pointer';
+                userProfileImageElement.addEventListener('click', () => {
+                    profileImageMenu.style.display = (profileImageMenu.style.display === 'none' || !profileImageMenu.style.display) ? 'flex' : 'none';
+                });
+                document.getElementById('uploadImageBtn').addEventListener('click', () => document.getElementById('imageInput').click());
+                document.getElementById('imageInput').addEventListener('change', uploadProfileImage);
+                document.getElementById('deleteImageBtn').addEventListener('click', deleteProfileImage);
+
+                window.addEventListener('click', (e) => {
+                    if (!e.target.closest('.profile-image-container')) {
+                        profileImageMenu.style.display = 'none';
+                    }
+                });
+            } else if (isLoggedIn) {
+                const isFollowing = currentUserData?.is_following || false;
+                
+                // 팔로우/언팔로우 버튼
+                const followBtn = document.createElement('button');
+                if (isFollowing) {
+                    followBtn.textContent = '언팔로우';
+                    followBtn.className = 'unfollow-btn';
+                } else {
+                    followBtn.textContent = '팔로우';
+                    followBtn.className = 'follow-btn';
+                }
+                followBtn.addEventListener('click', () => toggleFollow(userId));
+                profileActions.appendChild(followBtn);
+
+                // 쪽지 보내기 버튼
+                const messageBtn = document.createElement('a');
+                messageBtn.href = `/message.html?to=${userId}&nickname=${currentUserData?.nickname}`;
+                messageBtn.className = 'message-btn';
+                messageBtn.innerHTML = `
+                    <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 28 28" fill="none">
+                        <mask id="mask0_msg" style="mask-type:alpha" maskUnits="userSpaceOnUse" x="0" y="0" width="28" height="28">
+                            <rect width="28" height="28" fill="#D9D9D9"/>
+                        </mask>
+                        <g mask="url(#mask0_msg)">
+                            <path d="M4.66659 23.3334C4.02492 23.3334 3.47561 23.1049 3.01867 22.6479C2.56172 22.191 2.33325 21.6417 2.33325 21V7.00002C2.33325 6.35835 2.56172 5.80905 3.01867 5.3521C3.47561 4.89516 4.02492 4.66669 4.66659 4.66669H23.3333C23.9749 4.66669 24.5242 4.89516 24.9812 5.3521C25.4381 5.80905 25.6666 6.35835 25.6666 7.00002V21C25.6666 21.6417 25.4381 22.191 24.9812 22.6479C24.5242 23.1049 23.9749 23.3334 23.3333 23.3334H4.66659ZM13.9999 15.1667L4.66659 9.33335V21H23.3333V9.33335L13.9999 15.1667ZM13.9999 12.8334L23.3333 7.00002H4.66659L13.9999 12.8334ZM4.66659 9.33335V7.00002V21V9.33335Z" fill="currentColor"/>
+                        </g>
+                    </svg>
+                    쪽지 보내기
+                `;
+                profileActions.appendChild(messageBtn);
+            }
+        };
+
+        // 팔로우/언팔로우 토글 기능 (즉시 UI 업데이트)
+        const toggleFollow = async (targetUserId) => {
+            const followBtn = document.querySelector('.follow-btn, .unfollow-btn');
+            if (!followBtn) return;
+
+            const currentIsFollowing = currentUserData?.is_following || false;
+            
+            // 버튼 비활성화
+            followBtn.disabled = true;
+            
+            // 즉시 UI 업데이트
+            const newIsFollowing = !currentIsFollowing;
+            followBtn.textContent = newIsFollowing ? '언팔로우' : '팔로우';
+            followBtn.className = newIsFollowing ? 'unfollow-btn' : 'follow-btn';
+            
+            // 로컬 데이터도 미리 업데이트
+            if (currentUserData) {
+                currentUserData.is_following = newIsFollowing;
+            }
+
+            try {
+                const response = await fetch(`http://localhost:5001/api/follows/${targetUserId}`, {
+                    method: 'POST',
+                    headers: { 'Authorization': `Bearer ${accessToken}` }
+                });
+
+                if (!response.ok) throw new Error('팔로우 상태 변경 실패');
+                
+                // 팔로워 수만 업데이트 (버튼은 이미 올바르게 변경됨)
+                const statsResponse = await fetch(`http://localhost:5001/api/users/${userId}/stats`);
+                if (statsResponse.ok) {
                     const statsData = await statsResponse.json();
-
-                    document.getElementById('userNickname').textContent = userData.data.user.nickname;
-                    postsAuthorNicknameElement.textContent = userData.data.user.nickname;
-                    userProfileImageElement.src = userData.data.user.profile_image_url ? `http://localhost:5001${userData.data.user.profile_image_url}` : 'https://placehold.co/120x120/d9d9d9/555555?text=P';
-                    document.getElementById('postCountValue').textContent = statsData.data.postCount;
-                    document.getElementById('commentCountValue').textContent = statsData.data.commentsCount;
-                    document.getElementById('likeCountValue').textContent = statsData.data.likesReceivedCount;
                     document.getElementById('followerCountValue').textContent = statsData.data.followersCount;
                     document.getElementById('followingCountValue').textContent = statsData.data.followingCount;
-
-                    // 팔로워/팔로잉 수 클릭 이벤트 (팔로워/팔로잉 목록 페이지로 이동)
-                    document.getElementById('followerCount').addEventListener('click', () => window.location.href = `/followers.html?userId=${userId}`);
-                    document.getElementById('followingCount').addEventListener('click', () => window.location.href = `/following.html?userId=${userId}`);
-
-                    renderProfileActions(userData.data.user.is_following, userData.data.user.nickname);
-
-                } catch (error) {
-                    console.error('사용자 정보 로드 실패:', error);
-                    alert('사용자 정보를 불러오는 데 실패했습니다.');
                 }
-            };
-            
-            // 상호작용 버튼 렌더링
-            const renderProfileActions = (isFollowing, nickname) => {
-                const profileActions = document.getElementById('profileActions');
-                profileActions.innerHTML = '';
-            
-                if (isOwner) {
-                    // 본인 페이지일 경우: 프로필 이미지 클릭 이벤트 추가
-                    userProfileImageElement.style.cursor = 'pointer';
-                    userProfileImageElement.addEventListener('click', () => {
-                        profileImageMenu.style.display = (profileImageMenu.style.display === 'none' || !profileImageMenu.style.display) ? 'flex' : 'none';
-                    });
-                    document.getElementById('uploadImageBtn').addEventListener('click', () => document.getElementById('imageInput').click());
-                    document.getElementById('imageInput').addEventListener('change', uploadProfileImage);
-                    document.getElementById('deleteImageBtn').addEventListener('click', deleteProfileImage);
 
-                    // 이미지 메뉴 외 다른 곳 클릭 시 메뉴 숨기기
-                    window.addEventListener('click', (e) => {
-                        if (!e.target.closest('.profile-image-container')) {
-                            profileImageMenu.style.display = 'none';
-                        }
-                    });
-                } else if (isLoggedIn) {
-                    // 다른 로그인 사용자일 경우: 팔로우, 쪽지 보내기 버튼
-                    const followBtn = document.createElement('button');
-                    followBtn.textContent = isFollowing ? '팔로우 취소' : '팔로우';
-                    followBtn.addEventListener('click', () => toggleFollow(userId, isFollowing));
-                    profileActions.appendChild(followBtn);
-
-                    const messageBtn = document.createElement('button');
-                    messageBtn.textContent = '쪽지 보내기';
-                    messageBtn.addEventListener('click', () => window.location.href = `/message.html?to=${userId}&nickname=${nickname}`);
-                    profileActions.appendChild(messageBtn);
+            } catch (error) {
+                console.error('팔로우 작업 실패:', error);
+                alert('팔로우 상태 변경에 실패했습니다.');
+                
+                // 실패 시 원상복구
+                followBtn.textContent = currentIsFollowing ? '언팔로우' : '팔로우';
+                followBtn.className = currentIsFollowing ? 'unfollow-btn' : 'follow-btn';
+                if (currentUserData) {
+                    currentUserData.is_following = currentIsFollowing;
                 }
-            };
-            
-            // 프로필 이미지 수정/삭제 함수
-            const uploadProfileImage = async (event) => {
-                const file = event.target.files[0];
-                if (!file) return;
+            } finally {
+                followBtn.disabled = false;
+            }
+        };
+        
+        // 프로필 이미지 업로드/삭제
+        const uploadProfileImage = async (event) => {
+            const file = event.target.files[0];
+            if (!file) return;
 
-                const formData = new FormData();
-                formData.append('image', file);
+            const formData = new FormData();
+            formData.append('image', file);
 
-                try {
-                    const response = await fetch(`http://localhost:5001/api/users/${currentUserId}/profile/image`, {
-                        method: 'PUT',
-                        headers: { 'Authorization': `Bearer ${accessToken}` },
-                        body: formData
-                    });
-
-                    const result = await response.json();
-                    if (response.ok && result.success) {
-                        alert('프로필 이미지가 성공적으로 변경되었습니다.');
-                        window.location.reload();
-                    } else {
-                        alert(result.message || '이미지 변경에 실패했습니다.');
-                    }
-                } catch (error) {
-                    console.error('프로필 이미지 업로드 실패:', error);
-                    alert('서버 오류로 이미지 변경에 실패했습니다.');
-                }
-            };
-
-            const deleteProfileImage = async () => {
-                if (!confirm('프로필 이미지를 삭제하시겠습니까?')) return;
-                try {
-                    const response = await fetch(`http://localhost:5001/api/users/${currentUserId}/profile/image`, {
-                        method: 'DELETE',
-                        headers: { 'Authorization': `Bearer ${accessToken}` }
-                    });
-
-                    const result = await response.json();
-                    if (response.ok && result.success) {
-                        alert('프로필 이미지가 삭제되었습니다.');
-                        window.location.reload();
-                    } else {
-                        alert(result.message || '이미지 삭제에 실패했습니다.');
-                    }
-                } catch (error) {
-                    console.error('프로필 이미지 삭제 실패:', error);
-                    alert('서버 오류로 이미지 삭제에 실패했습니다.');
-                }
-            };
-
-            // 팔로우/언팔로우 토글 기능
-            const toggleFollow = async (targetUserId, isFollowing) => {
-                const method = isFollowing ? 'DELETE' : 'POST';
-                const url = `http://localhost:5001/api/follows/${targetUserId}`;
-
-                try {
-                    const response = await fetch(url, {
-                        method: method,
-                        headers: { 'Authorization': `Bearer ${accessToken}` }
-                    });
-
-                    if (!response.ok) throw new Error('팔로우 상태 변경 실패');
-                    await fetchUserData();
-
-                } catch (error) {
-                    console.error('팔로우 작업 실패:', error);
-                    alert('팔로우 상태 변경에 실패했습니다.');
-                }
-            };
-
-            // 사용자의 게시글 목록 로드
-            const fetchUserPosts = async () => {
-                postsTableBody.innerHTML = `<tr><td colspan="4" style="text-align: center;">게시글을 불러오는 중...</td></tr>`;
-
-                // 정렬 버튼 활성화/비활성화
-                document.querySelectorAll('.sort-btn').forEach(btn => btn.classList.remove('active'));
-                document.getElementById(`sortBy${sortBy.charAt(0).toUpperCase() + sortBy.slice(1)}`).classList.add('active');
-
-                try {
-                    const response = await fetch(`http://localhost:5001/api/users/${userId}/posts?page=${currentPage}&limit=10&sort=${sortBy}`);
-                    if (!response.ok) throw new Error('사용자 게시글을 불러오지 못했습니다.');
-                    const result = await response.json();
-                    
-                    const posts = result.data.posts || [];
-                    const totalPosts = result.data.pagination.totalPosts || 0;
-                    const totalPages = result.data.pagination.totalPages || 0;
-                    userPostsTotalCount = totalPosts;
-
-                    postCountInfoElement.textContent = `총 ${totalPosts} 개의 글`;
-
-                    postsTableBody.innerHTML = '';
-                    if (posts.length > 0) {
-                        posts.forEach(post => {
-                            const row = document.createElement('tr');
-                            row.innerHTML = `
-                                <td><a href="/post_detail.html?id=${post._id}">${post.title}</a> <span class="post-count">[${post.post_comment_count}]</span></td>
-                                <td>${post.user_id.nickname}</td>
-                                <td>${post.created_at_display}</td>
-                                <td>${post.post_view_count}</td>
-                            `;
-                            postsTableBody.appendChild(row);
-                        });
-                    } else {
-                        postsTableBody.innerHTML = `<tr><td colspan="4" style="text-align: center;">작성된 게시글이 없습니다.</td></tr>`;
-                    }
-                    renderPagination(totalPages);
-                } catch (error) {
-                    console.error('사용자 게시글 로드 실패:', error);
-                    postsTableBody.innerHTML = `<tr><td colspan="4" style="text-align: center;">게시글을 불러오지 못했습니다.</td></tr>`;
-                }
-            };
-
-            // 페이지네이션 렌더링 함수
-            const renderPagination = (totalPages) => {
-                paginationContainer.innerHTML = '';
-                if (totalPages <= 1) return;
-
-                const prevButton = document.createElement('button');
-                prevButton.textContent = '< 이전';
-                prevButton.disabled = currentPage === 1;
-                prevButton.addEventListener('click', () => {
-                    if (currentPage > 1) {
-                        currentPage--;
-                        fetchUserPosts();
-                    }
+            try {
+                const response = await fetch(`http://localhost:5001/api/users/${currentUserId}/profile/image`, {
+                    method: 'PUT',
+                    headers: { 'Authorization': `Bearer ${accessToken}` },
+                    body: formData
                 });
-                paginationContainer.appendChild(prevButton);
 
-                for (let i = 1; i <= totalPages; i++) {
-                    const pageBtn = document.createElement('button');
-                    pageBtn.textContent = i;
-                    if (i === currentPage) pageBtn.classList.add('active');
-                    pageBtn.addEventListener('click', () => {
-                        currentPage = i;
-                        fetchUserPosts();
-                    });
-                    paginationContainer.appendChild(pageBtn);
+                const result = await response.json();
+                if (response.ok && result.success) {
+                    alert('프로필 이미지가 성공적으로 변경되었습니다.');
+                    window.location.reload();
+                } else {
+                    alert(result.message || '이미지 변경에 실패했습니다.');
                 }
+            } catch (error) {
+                console.error('프로필 이미지 업로드 실패:', error);
+                alert('서버 오류로 이미지 변경에 실패했습니다.');
+            }
+        };
 
-                const nextButton = document.createElement('button');
-                nextButton.textContent = '다음 >';
-                nextButton.disabled = currentPage === totalPages;
-                nextButton.addEventListener('click', () => {
-                    if (currentPage < totalPages) {
-                        currentPage++;
-                        fetchUserPosts();
-                    }
+        const deleteProfileImage = async () => {
+            if (!confirm('프로필 이미지를 삭제하시겠습니까?')) return;
+            try {
+                const response = await fetch(`http://localhost:5001/api/users/${currentUserId}/profile/image`, {
+                    method: 'DELETE',
+                    headers: { 'Authorization': `Bearer ${accessToken}` }
                 });
-                paginationContainer.appendChild(nextButton);
-            };
 
-            // 정렬 버튼 이벤트 리스너
-            document.getElementById('sortByLatest').addEventListener('click', () => {
-                sortBy = 'latest';
-                currentPage = 1;
-                fetchUserPosts();
+                const result = await response.json();
+                if (response.ok && result.success) {
+                    alert('프로필 이미지가 삭제되었습니다.');
+                    window.location.reload();
+                } else {
+                    alert(result.message || '이미지 삭제에 실패했습니다.');
+                }
+            } catch (error) {
+                console.error('프로필 이미지 삭제 실패:', error);
+                alert('서버 오류로 이미지 삭제에 실패했습니다.');
+            }
+        };
+
+        // 게시글 목록 로드
+        const fetchUserPosts = async () => {
+            postsTableBody.innerHTML = `<tr><td colspan="4" style="text-align: center;">게시글을 불러오는 중...</td></tr>`;
+
+            document.querySelectorAll('.sort-btn').forEach(btn => btn.classList.remove('active'));
+            document.getElementById(`sortBy${sortBy.charAt(0).toUpperCase() + sortBy.slice(1)}`).classList.add('active');
+
+            try {
+                const response = await fetch(`http://localhost:5001/api/users/${userId}/posts?page=${currentPage}&limit=10&sort=${sortBy}`);
+                if (!response.ok) throw new Error('사용자 게시글을 불러오지 못했습니다.');
+                const result = await response.json();
+                
+                const posts = result.data.posts || [];
+                const totalPosts = result.data.pagination.totalPosts || 0;
+                const totalPages = result.data.pagination.totalPages || 0;
+
+                postCountInfoElement.textContent = `총 ${totalPosts} 개의 글`;
+
+                postsTableBody.innerHTML = '';
+                if (posts.length > 0) {
+                    posts.forEach(post => {
+                        const row = document.createElement('tr');
+                        row.innerHTML = `
+                            <td><a href="/post_detail.html?id=${post._id}">${post.title}</a> <span class="post-count">[${post.post_comment_count}]</span></td>
+                            <td>${post.user_id.nickname}</td>
+                            <td>${post.created_at_display}</td>
+                            <td>${post.post_view_count}</td>
+                        `;
+                        postsTableBody.appendChild(row);
+                    });
+                } else {
+                    postsTableBody.innerHTML = `<tr><td colspan="4" style="text-align: center;">작성된 게시글이 없습니다.</td></tr>`;
+                }
+                renderPagination(totalPages);
+            } catch (error) {
+                console.error('사용자 게시글 로드 실패:', error);
+                postsTableBody.innerHTML = `<tr><td colspan="4" style="text-align: center;">게시글을 불러오지 못했습니다.</td></tr>`;
+            }
+        };
+
+        // 페이지네이션 렌더링
+        const renderPagination = (totalPages) => {
+            paginationContainer.innerHTML = '';
+            if (totalPages <= 1) return;
+
+            const prevButton = document.createElement('button');
+            prevButton.textContent = '< 이전';
+            prevButton.disabled = currentPage === 1;
+            prevButton.addEventListener('click', () => {
+                if (currentPage > 1) {
+                    currentPage--;
+                    fetchUserPosts();
+                }
             });
+            paginationContainer.appendChild(prevButton);
 
-            document.getElementById('sortByPopular').addEventListener('click', () => {
-                sortBy = 'popular';
-                currentPage = 1;
-                fetchUserPosts();
+            for (let i = 1; i <= totalPages; i++) {
+                const pageBtn = document.createElement('button');
+                pageBtn.textContent = i;
+                if (i === currentPage) pageBtn.classList.add('active');
+                pageBtn.addEventListener('click', () => {
+                    currentPage = i;
+                    fetchUserPosts();
+                });
+                paginationContainer.appendChild(pageBtn);
+            }
+
+            const nextButton = document.createElement('button');
+            nextButton.textContent = '다음 >';
+            nextButton.disabled = currentPage === totalPages;
+            nextButton.addEventListener('click', () => {
+                if (currentPage < totalPages) {
+                    currentPage++;
+                    fetchUserPosts();
+                }
             });
+            paginationContainer.appendChild(nextButton);
+        };
 
-            // 초기 데이터 로드
-            renderHeader();
-            fetchUserData();
+        // 정렬 버튼 이벤트
+        document.getElementById('sortByLatest').addEventListener('click', () => {
+            sortBy = 'latest';
+            currentPage = 1;
             fetchUserPosts();
         });
+
+        document.getElementById('sortByPopular').addEventListener('click', () => {
+            sortBy = 'popular';
+            currentPage = 1;
+            fetchUserPosts();
+        });
+
+        // 초기 데이터 로드
+        renderHeader();
+        await fetchUserData();
+        fetchUserPosts();
+    });
     </script>
 </body>
 </html>

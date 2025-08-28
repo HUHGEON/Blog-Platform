@@ -926,7 +926,7 @@
                         document.getElementById('postViewCount').textContent = currentPostData.post_view_count;
                         document.getElementById('postLikeCount').textContent = currentPostData.post_like_count;
                         document.getElementById('postAuthorNickname').textContent = currentPostData.user_id.nickname;
-                        document.getElementById('authorProfileLink').href = `/user_page.html?id=${currentPostData.user_id._id}`;
+                        document.getElementById('authorProfileLink').href = `/user_page.html?userId=${currentPostData.user_id._id}`;
 
                         const authorProfileImage = document.getElementById('authorProfileImage');
                         if (currentPostData.user_id.profile_image_url) {
@@ -1212,7 +1212,7 @@
                                 }
 
                                 commentItem.innerHTML = `
-                                    <a href="/user_page.html?id=${comment.user_id._id}" class="profile-icon">
+                                    <a href="/user_page.html?userId=${comment.user_id._id}" class="profile-icon">
                                         <img src="${profileImageUrl}" alt="${comment.user_id.nickname} 프로필">
                                     </a>
                                     <div class="comment-content-wrapper">
