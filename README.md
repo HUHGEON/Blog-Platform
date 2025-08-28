@@ -142,6 +142,6 @@ http-server -p 5002
 - Database: MySQL 또는 MongoDB
 - Frontend: 자유 선택 (Vanilla JS, HTML, React, Vue 등)
 
-  ### 추가 구현
-  - 사용자끼리 쪽지 기능
-  - 스토리 기능 (팔로우한 사람만 조회가능)
+### 추가 구현
+- 사용자끼리 쪽지 기능
+- 스토리 기능 (팔로우한 사람만 조회가능)
