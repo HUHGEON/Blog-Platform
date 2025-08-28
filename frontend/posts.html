@@ -1,0 +1,795 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>글 목록 - Blog</title>
+    <style>
+        /* Figma 색상 팔레트 */
+        :root {
+            --color-black: #000000;
+            --color-dark-gray: #1C1B1F;
+            --color-white: #FFFFFF;
+            --color-light-gray-1: #D9D9D9;
+            --color-light-gray-2: #8D8989;
+            --color-medium-gray: #BEBEBE;
+            --color-very-light-gray: #F0F2F5;
+            --color-bg-white: #FFFBFB;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            margin: 0;
+            background-color: var(--color-very-light-gray);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+        }
+
+        /* 상단바 */
+        .header {
+            width: 100%;
+            height: 60px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background-color: var(--color-white);
+            border-bottom: 1px solid var(--color-light-gray-1);
+            box-sizing: border-box;
+            padding: 0 20px;
+        }
+        .header-inner {
+            width: 100%;
+            max-width: 1200px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+        .header-logo-group {
+            display: flex;
+            align-items: center;
+            cursor: pointer;
+            text-decoration: none;
+            color: inherit;
+        }
+        .header-logo-group svg {
+            width: 24px;
+            height: 24px;
+            margin-right: 5px;
+            fill: var(--color-black);
+        }
+        .header-logo-group span {
+            font-size: 20px;
+            font-weight: bold;
+            color: var(--color-black);
+        }
+        .header-nav {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            margin-left: 20px;
+        }
+        .header-nav-item {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            text-decoration: none;
+            color: #555;
+            font-size: 14px;
+        }
+        .header-nav-item svg {
+            width: 18px;
+            height: 18px;
+            fill: var(--color-black);
+        }
+        .header-nav-item:hover {
+            color: #3498db;
+        }
+        .header-nav-item:hover svg {
+            fill: #3498db;
+        }
+        
+        .header-search {
+            flex-grow: 1;
+            max-width: 500px;
+            margin: 0 120px;
+            position: relative;
+        }
+        .header-search-container {
+            display: flex;
+            align-items: center;
+            width: 100%;
+            padding: 8px 15px;
+            border: 1px solid var(--color-medium-gray);
+            border-radius: 5px;
+            background-color: var(--color-white);
+            box-sizing: border-box;
+        }
+        .header-search-container svg {
+            width: 18px;
+            height: 18px;
+            fill: var(--color-black);
+            margin-right: 8px;
+        }
+        .header-search-container input {
+            width: 100%;
+            border: none;
+            background: none;
+            outline: none;
+            font-size: 14px;
+        }
+        .header-search-container input::placeholder {
+            color: var(--color-light-gray-2);
+        }
+        
+        .header-right {
+            margin-left: auto;
+            display: flex;
+            align-items: center;
+        }
+        .header-right .login-button-top {
+            background-color: var(--color-black);
+            color: var(--color-white);
+            padding: 8px 15px;
+            border: none;
+            border-radius: 5px;
+            font-size: 14px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+        .header-right .login-button-top:hover {
+            background-color: var(--color-dark-gray);
+        }
+        .header-right .login-button-top svg {
+            fill: var(--color-white);
+            width: 18px;
+            height: 18px;
+        }
+        .header-right .logged-in-menu {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            font-size: 14px;
+        }
+        .header-right .user-profile-group {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            text-decoration: none;
+            color: var(--color-black);
+            cursor: pointer;
+        }
+        .header-right .user-profile-group .profile-icon {
+            width: 30px;
+            height: 30px;
+            background-color: var(--color-light-gray-1);
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow: hidden;
+        }
+        .header-right .user-profile-group .profile-icon img {
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            object-fit: cover;
+        }
+        /* 로그인 시 상단바 아이템 (글쓰기, 쪽지, 로그아웃) */
+        .header-right .logged-in-menu .nav-item-logged-in {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            text-decoration: none;
+            color: var(--color-black);
+            font-size: 14px;
+            padding: 0;
+            border: none;
+            background: none;
+            cursor: pointer;
+            transition: color 0.3s;
+        }
+        .header-right .logged-in-menu .nav-item-logged-in:hover {
+            color: #3498db;
+        }
+        .header-right .logged-in-menu .nav-item-logged-in svg {
+            width: 18px;
+            height: 18px;
+            fill: var(--color-black);
+            transition: fill 0.3s;
+        }
+        /* 로그아웃 버튼 */
+        .header-right .logout-button {
+            display: flex;
+            align-items: center;
+            cursor: pointer;
+            text-decoration: none;
+            color: var(--color-black);
+            gap: 5px;
+            font-size: 14px;
+        }
+        .header-right .logout-button:hover {
+            color: #3498db;
+        }
+        .header-right .logout-button:hover svg path {
+            fill: #3498db;
+        }
+
+        /* 메인 컨텐츠 */
+        .main-container {
+            width: 100%;
+            max-width: 1200px;
+            padding: 20px;
+            box-sizing: border-box;
+        }
+        .post-list-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        .post-list-header h2 {
+            font-size: 28px;
+            color: var(--color-black);
+            margin: 0;
+            font-weight: normal;
+        }
+        .post-list-controls {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+        .post-list-controls .button-group {
+            display: flex;
+            gap: 5px;
+        }
+        .post-list-controls .button-group button {
+            background-color: var(--color-white);
+            color: var(--color-dark-gray);
+            border: 1px solid var(--color-medium-gray);
+            border-radius: 5px;
+            padding: 8px 15px;
+            cursor: pointer;
+            transition: background-color 0.2s, color 0.2s;
+            font-size: 14px;
+        }
+        .post-list-controls .button-group button.active,
+        .post-list-controls .button-group button:hover {
+            background-color: var(--color-dark-gray);
+            color: var(--color-white);
+        }
+        .write-button {
+            background-color: var(--color-black);
+            color: var(--color-white);
+            border: none;
+            border-radius: 5px;
+            padding: 8px 15px;
+            font-size: 14px;
+            cursor: pointer;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+        .write-button svg {
+            fill: var(--color-white);
+            width: 18px;
+            height: 18px;
+        }
+        .post-search-container {
+            margin-bottom: 20px;
+        }
+        .post-search-container input {
+            width: 100%;
+            padding: 8px 15px;
+            border: 1px solid var(--color-medium-gray);
+            border-radius: 5px;
+            background-color: var(--color-white);
+            box-sizing: border-box;
+            font-size: 14px;
+        }
+        .post-list-container {
+            width: 100%;
+            background-color: var(--color-white);
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+            padding: 20px;
+            box-sizing: border-box;
+        }
+        .post-count-info-wrapper { /* 새로운 wrapper 추가 */
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+        .post-count-info {
+            font-size: 14px;
+            color: #555;
+            margin: 0; /* 마진 초기화 */
+        }
+        .sort-options-bottom { /* 정렬 버튼을 위한 새로운 클래스 */
+            display: flex;
+            gap: 5px;
+        }
+        .sort-options-bottom button {
+            background-color: var(--color-white);
+            color: var(--color-dark-gray);
+            border: 1px solid var(--color-medium-gray);
+            border-radius: 5px;
+            padding: 4px 10px; /* 패딩 조정 */
+            cursor: pointer;
+            transition: background-color 0.2s, color 0.2s;
+            font-size: 12px; /* 폰트 크기 조정 */
+        }
+        .sort-options-bottom button.active {
+            background-color: var(--color-dark-gray);
+            color: var(--color-white);
+        }
+        .sort-options-bottom button:not(.active):hover { /* 선택 안된 버튼 호버 시 */
+            background-color: var(--color-very-light-gray);
+        }
+
+        .post-table {
+            width: 100%;
+            border-collapse: collapse;
+            text-align: left;
+            font-size: 14px;
+        }
+        .post-table th, .post-table td {
+            padding: 8px;
+            border-bottom: 1px solid var(--color-light-gray-1);
+        }
+        .post-table th {
+            background-color: var(--color-very-light-gray);
+            color: var(--color-dark-gray);
+        }
+        .post-table tbody tr:hover {
+            background-color: var(--color-very-light-gray);
+        }
+        .post-table a {
+            text-decoration: none;
+            color: var(--color-black);
+        }
+        .post-table .post-title {
+            font-weight: normal;
+        }
+        .post-table .post-count {
+            color: var(--color-dark-gray);
+            font-weight: bold;
+            margin-left: 5px;
+        }
+        .post-table .post-author, .post-table .post-date, .post-table .post-views {
+            color: #777;
+        }
+        .post-table th:nth-child(2),
+        .post-table td:nth-child(2),
+        .post-table th:nth-child(3),
+        .post-table td:nth-child(3),
+        .post-table th:nth-child(4),
+        .post-table td:nth-child(4) {
+            text-align: center;
+            width: 10%;
+        }
+        .post-table th:nth-child(1),
+        .post-table td:nth-child(1) {
+            width: 68%;
+        }
+        .pagination {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin-top: 20px;
+            gap: 5px;
+        }
+        .pagination button {
+            background-color: var(--color-white);
+            border: 1px solid var(--color-medium-gray);
+            color: var(--color-dark-gray);
+            padding: 8px 12px;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.2s, color 0.2s;
+            font-size: 14px;
+        }
+        .pagination button.active {
+            background-color: var(--color-dark-gray);
+            color: var(--color-white);
+        }
+        .pagination button:not(.active):hover {
+            background-color: var(--color-very-light-gray);
+        }
+        .pagination button:disabled {
+            cursor: not-allowed;
+            opacity: 0.5;
+        }
+        .pagination .page-info {
+            font-size: 14px;
+            color: #555;
+            margin: 0 5px;
+        }
+    </style>
+</head>
+<body>
+    <!-- 상단바 -->
+    <div class="header">
+        <div class="header-inner">
+            <div class="header-left">
+                <a href="/" class="header-logo-group">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 48 48" fill="none">
+                      <mask id="mask0_5_1247" style="mask-type:alpha" maskUnits="userSpaceOnUse" x="0" y="0" width="48" height="48">
+                        <rect x="0.5" y="0.5" width="47" height="47" fill="#D9D9D9" stroke="#BEBEBE"/>
+                      </mask>
+                      <g mask="url(#mask0_5_1247)">
+                        <path d="M8 4.5H40C40.9663 4.5 41.7814 4.83801 42.4717 5.52832C43.162 6.21863 43.5 7.03366 43.5 8V32C43.5 32.9663 43.162 33.7814 42.4717 34.4717C41.7814 35.162 40.9663 35.5 40 35.5H11.793L4.5 42.793V8C4.5 7.03366 4.83801 6.21863 5.52832 5.52832C6.21863 4.83801 7.03366 4.5 8 4.5ZM7.5 35.4385L8.34961 34.6074L10.5039 32.5H40.5V7.5H7.5V35.4385Z" fill="#1C1B1F" stroke="#BEBEBE"/>
+                      </g>
+                    </svg>
+                    <span>Blog</span>
+                </a>
+                <div class="header-nav">
+                    <a href="/" class="header-nav-item">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="30" height="28" viewBox="0 0 30 28" fill="none">
+                          <mask id="mask0_5_1244" style="mask-type:alpha" maskUnits="userSpaceOnUse" x="0" y="0" width="30" height="28">
+                            <rect width="30" height="28" fill="#D9D9D9"/>
+                          </mask>
+                          <g mask="url(#mask0_5_1244)">
+                            <path d="M7.75428 22.4533H11.3771V15.2076H18.6228V22.4533H22.2457V11.5848L15 6.15051L7.75428 11.5848V22.4533ZM5.33905 24.8685V10.3772L15 3.13147L24.6609 10.3772V24.8685H16.2076V17.6228H13.7924V24.8685H5.33905Z" fill="#1C1B1F"/>
+                          </g>
+                        </svg>
+                        홈
+                    </a>
+                    <a href="/posts.html" class="header-nav-item">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 28 28" fill="none">
+                          <mask id="mask0_5_1251" style="mask-type:alpha" maskUnits="userSpaceOnUse" x="0" y="0" width="28" height="28">
+                            <rect width="28" height="28" fill="#D9D9D9"/>
+                          </mask>
+                          <g mask="url(#mask0_5_1251)">
+                            <path d="M8.16667 19.8333H16.3333V17.5H8.16667V19.8333ZM8.16667 15.1667H19.8333V12.8333H8.16667V15.1667ZM8.16667 10.5H19.8333V8.16667H8.16667V10.5ZM5.83333 24.5C5.19167 24.5 4.64236 24.2715 4.18542 23.8146C3.72847 23.3576 3.5 22.8083 3.5 22.1667V5.83333C3.5 5.19167 3.72847 4.64236 4.18542 4.18542C4.64236 3.72847 5.19167 3.5 5.83333 3.5H22.1667C22.8083 3.5 23.3576 3.72847 23.8146 4.18542C24.2715 4.64236 24.5 5.19167 24.5 5.83333V22.1667C24.5 22.8083 24.2715 23.3576 23.8146 23.8146C23.3576 24.2715 22.8083 24.5 22.1667 24.5H5.83333ZM5.83333 22.1667H22.1667V5.83333H5.83333V22.1667Z" fill="#1C1B1F"/>
+                          </g>
+                        </svg>
+                        글 목록
+                    </a>
+                </div>
+            </div>
+            <div class="header-search">
+                <div class="header-search-container">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="19" height="19" viewBox="0 0 19 19" fill="none">
+                      <mask id="mask0_5_1264" style="mask-type:alpha" maskUnits="userSpaceOnUse" x="0" y="0" width="19" height="19">
+                        <rect width="19" height="19" fill="#D9D9D9"/>
+                      </mask>
+                      <g mask="url(#mask0_5_1264)">
+                        <path d="M15.5167 16.625L10.5292 11.6375C10.1333 11.9542 9.67812 12.2049 9.16354 12.3896C8.64896 12.5743 8.10139 12.6667 7.52083 12.6667C6.08264 12.6667 4.86545 12.1686 3.86927 11.1724C2.87309 10.1762 2.375 8.95903 2.375 7.52083C2.375 6.08264 2.87309 4.86545 3.86927 3.86927C4.86545 2.87309 6.08264 2.375 7.52083 2.375C8.95903 2.375 10.1762 2.87309 11.1724 3.86927C12.1686 4.86545 12.6667 6.08264 12.6667 7.52083C12.6667 8.10139 12.5743 8.64896 12.3896 9.16354C12.2049 9.67812 11.9542 10.1333 11.6375 10.5292L16.625 15.5167L15.5167 16.625ZM7.52083 11.0833C8.51042 11.0833 9.35156 10.737 10.0443 10.0443C10.737 9.35156 11.0833 8.51042 11.0833 7.52083C11.0833 6.53125 10.737 5.6901 10.0443 4.9974C9.35156 4.30469 8.51042 3.95833 7.52083 3.95833C6.53125 3.95833 5.6901 4.30469 4.9974 4.9974C4.30469 5.6901 3.95833 6.53125 3.95833 7.52083C3.95833 8.51042 4.30469 9.35156 4.9974 10.0443C5.6901 10.737 6.53125 11.0833 7.52083 11.0833Z" fill="#1C1B1F"/>
+                      </g>
+                    </svg>
+                    <input type="text" id="searchInput" placeholder="검색...">
+                </div>
+            </div>
+            <div class="header-right" id="headerRight">
+                <!-- 로그인 상태에 따라 내용이 동적으로 변경됩니다 -->
+            </div>
+        </div>
+    </div>
+
+    <!-- 글 목록 컨텐츠 영역 -->
+    <div class="main-container">
+        <div class="post-list-header">
+            <h2 id="pageTitle">전체 글</h2>
+            <div class="post-list-controls">
+                <!-- 로그인 상태에 따라 '팔로잉만 보기' 버튼이 동적으로 표시됩니다 -->
+                <div class="button-group" id="loggedInControls">
+                    <!-- '팔로잉만 보기' 버튼이 여기에 들어갑니다 -->
+                </div>
+                <!-- '글쓰기' 버튼은 로그인 시 활성화 -->
+                <a href="/post_write.html" class="write-button" id="writeButton">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 22 22" fill="none">
+                      <path d="M1.87076 21.5C1.46242 21.5972 1.10756 21.4951 0.806175 21.1938C0.504786 20.8924 0.402702 20.5375 0.499925 20.1292L1.66659 14.5583L7.44159 20.3333L1.87076 21.5ZM7.44159 20.3333L1.66659 14.5583L15.0249 1.20001C15.4721 0.752786 16.0263 0.529175 16.6874 0.529175C17.3485 0.529175 17.9027 0.752786 18.3499 1.20001L20.7999 3.65001C21.2471 4.09723 21.4708 4.6514 21.4708 5.31251C21.4708 5.97362 21.2471 6.52779 20.7999 6.97501L7.44159 20.3333ZM16.6874 2.83334L4.61242 14.9083L7.09159 17.3875L19.1666 5.31251L16.6874 2.83334Z" fill="white"/>
+                    </svg>
+                    글쓰기
+                </a>
+            </div>
+        </div>
+        <div class="post-search-container">
+            <input type="text" id="postSearchInput" placeholder="검색...">
+        </div>
+
+        <div class="post-list-container">
+            <div class="post-count-info-wrapper">
+                <div class="post-count-info" id="postCountInfo">0 개의 글</div>
+                <div class="sort-options-bottom">
+                    <button id="sortLatest" class="active">최신순</button>
+                    <button id="sortPopular">인기순</button>
+                </div>
+            </div>
+            <table class="post-table">
+                <thead>
+                    <tr>
+                        <th>제목</th>
+                        <th style="text-align: center; width: 10%;">작성자</th>
+                        <th style="text-align: center; width: 10%;">작성일</th>
+                        <th style="text-align: center; width: 10%;">조회수</th>
+                    </tr>
+                </thead>
+                <tbody id="postsTableBody">
+                    <!-- 글 목록 데이터가 여기에 동적으로 추가됩니다 -->
+                </tbody>
+            </table>
+            <div class="pagination" id="pagination">
+                <!-- 페이지네이션 버튼이 여기에 동적으로 추가됩니다 -->
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', async () => {
+            const accessToken = localStorage.getItem('accessToken');
+            const userNickname = localStorage.getItem('userNickname');
+            const headerRight = document.getElementById('headerRight');
+            const loggedInControls = document.getElementById('loggedInControls');
+            const postSearchInput = document.getElementById('postSearchInput');
+            const postsTableBody = document.getElementById('postsTableBody');
+            const postCountInfo = document.getElementById('postCountInfo');
+            const pageTitle = document.getElementById('pageTitle');
+            const paginationContainer = document.getElementById('pagination');
+            const sortLatestButton = document.getElementById('sortLatest');
+            const sortPopularButton = document.getElementById('sortPopular');
+            const writeButton = document.getElementById('writeButton');
+
+            let currentPage = 1;
+            let currentSort = 'latest';
+            let isFollowingOnly = false;
+
+            // 상단바 검색 기능
+            const searchInput = document.getElementById('searchInput');
+            if (searchInput) {
+                searchInput.addEventListener('keypress', (e) => {
+                    if (e.key === 'Enter') {
+                        const query = searchInput.value.trim();
+                        if (query) {
+                            window.location.href = `/search.html?q=${encodeURIComponent(query)}`;
+                        }
+                    }
+                });
+            }
+
+            // 상단바 렌더링
+            if (accessToken && userNickname) {
+                headerRight.innerHTML = `
+                    <div class="logged-in-menu">
+                        <a href="/post_write.html" class="nav-item-logged-in">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 22 22" fill="none">
+                              <path d="M1.87076 21.5C1.46242 21.5972 1.10756 21.4951 0.806175 21.1938C0.504786 20.8924 0.402702 20.5375 0.499925 20.1292L1.66659 14.5583L7.44159 20.3333L1.87076 21.5ZM7.44159 20.3333L1.66659 14.5583L15.0249 1.20001C15.4721 0.752786 16.0263 0.529175 16.6874 0.529175C17.3485 0.529175 17.9027 0.752786 18.3499 1.20001L20.7999 3.65001C21.2471 4.09723 21.4708 4.6514 21.4708 5.31251C21.4708 5.97362 21.2471 6.52779 20.7999 6.97501L7.44159 20.3333ZM16.6874 2.83334L4.61242 14.9083L7.09159 17.3875L19.1666 5.31251L16.6874 2.83334Z" fill="#1C1B1F"/>
+                            </svg>
+                            글쓰기
+                        </a>
+                        <a href="/messages.html" class="nav-item-logged-in">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 28 28" fill="none">
+                              <mask id="mask0_4_38" style="mask-type:alpha" maskUnits="userSpaceOnUse" x="0" y="0" width="28" height="28">
+                                <rect width="28" height="28" fill="#D9D9D9"/>
+                              </mask>
+                              <g mask="url(#mask0_4_38)">
+                                <path d="M4.66659 23.3334C4.02492 23.3334 3.47561 23.1049 3.01867 22.6479C2.56172 22.191 2.33325 21.6417 2.33325 21V7.00002C2.33325 6.35835 2.56172 5.80905 3.01867 5.3521C3.47561 4.89516 4.02492 4.66669 4.66659 4.66669H23.3333C23.9749 4.66669 24.5242 4.89516 24.9812 5.3521C25.4381 5.80905 25.6666 6.35835 25.6666 7.00002V21C25.6666 21.6417 25.4381 22.191 24.9812 22.6479C24.5242 23.1049 23.9749 23.3334 23.3333 23.3334H4.66659ZM13.9999 15.1667L4.66659 9.33335V21H23.3333V9.33335L13.9999 15.1667ZM13.9999 12.8334L23.3333 7.00002H4.66659L13.9999 12.8334ZM4.66659 9.33335V7.00002V21V9.33335Z" fill="#1C1B1F"/>
+                              </g>
+                            </svg>
+                            쪽지
+                        </a>
+                        <a href="/user_page.html" class="user-profile-group">
+                            <div class="profile-icon">
+                                <img src="https://placehold.co/30x30/d9d9d9/555555?text=P" alt="Profile">
+                            </div>
+                            <span>${userNickname}</span>
+                        </a>
+                        <a href="#" class="nav-item-logged-in" id="logoutButton">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 28 28" fill="none">
+                              <mask id="mask0_4_48" style="mask-type:alpha" maskUnits="userSpaceOnUse" x="0" y="0" width="28" height="28">
+                                <rect width="28" height="28" fill="#D9D9D9"/>
+                              </mask>
+                              <g mask="url(#mask0_4_48)">
+                                <path d="M5.83333 24.5C5.19167 24.5 4.64236 24.2715 4.18542 23.8146C3.72847 23.3576 3.5 22.8083 3.5 22.1667V5.83333C3.5 5.19167 3.72847 4.64236 4.18542 4.18542C4.64236 3.72847 5.19167 3.5 5.83333 3.5H14V5.83333H5.83333V22.1667H14V24.5H5.83333ZM18.6667 19.8333L17.0625 18.1417L20.0375 15.1667H10.5V12.8333H20.0375L17.0625 9.85833L18.6667 8.16667L24.5 14L18.6667 19.8333Z" fill="#1C1B1F"/>
+                              </g>
+                            </svg>
+                        </a>
+                    </div>
+                `;
+                loggedInControls.innerHTML = `
+                    <button id="toggleFollowingView" class="toggle-following-button">팔로잉만 보기</button>
+                `;
+                // 로그인한 경우 글쓰기 버튼 표시
+                writeButton.style.display = 'flex';
+                
+                document.getElementById('logoutButton').addEventListener('click', (e) => {
+                    e.preventDefault();
+                    localStorage.removeItem('accessToken');
+                    localStorage.removeItem('refreshToken');
+                    localStorage.removeItem('userNickname');
+                    window.location.href = '/posts.html';
+                });
+                document.getElementById('toggleFollowingView').addEventListener('click', (e) => {
+                    isFollowingOnly = !isFollowingOnly;
+                    e.target.textContent = isFollowingOnly ? '전체글 보기' : '팔로잉만 보기';
+                    // 페이지 제목도 함께 업데이트
+                    if (isFollowingOnly) {
+                        pageTitle.textContent = '팔로우하는 사람의 글';
+                    } else {
+                        pageTitle.textContent = '전체 글';
+                    }
+                    currentPage = 1;
+                    fetchPosts();
+                });
+            } else {
+                headerRight.innerHTML = `
+                    <a href="/login.html" class="login-button-top">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 28 28" fill="none">
+                          <mask id="mask0_5_1257" style="mask-type:alpha" maskUnits="userSpaceOnUse" x="0" y="0" width="28" height="28">
+                            <rect x="0.5" y="0.5" width="27" height="27" fill="#D9D9D9" stroke="white"/>
+                          </mask>
+                          <g mask="url(#mask0_5_1257)">
+                            <path d="M13.9997 15.6667C15.2433 15.6667 16.4678 15.8132 17.6735 16.1052C18.8771 16.3967 20.0646 16.8345 21.236 17.4196H21.237C21.7179 17.6684 22.1033 18.027 22.3971 18.5056C22.6881 18.9796 22.8336 19.4968 22.8336 20.0671V22.8337H5.16666V20.0671L5.17349 19.8552C5.20532 19.3677 5.34852 18.9203 5.60318 18.5056C5.89698 18.0271 6.28152 17.6674 6.76236 17.4186C7.93399 16.8333 9.12199 16.3967 10.3258 16.1052C11.5316 15.8132 12.756 15.6667 13.9997 15.6667ZM13.9997 16.9997C12.8703 16.9997 11.7511 17.136 10.6432 17.4079C9.53547 17.6798 8.441 18.0872 7.36002 18.6276L7.35025 18.6325L7.34048 18.6384C7.08831 18.7785 6.88479 18.9758 6.73404 19.2224C6.57701 19.4793 6.49966 19.7653 6.49966 20.0671V21.4997H21.4997V20.0671C21.4997 19.7653 21.4233 19.4793 21.2663 19.2224C21.1156 18.9758 20.9119 18.7785 20.6598 18.6384L20.6501 18.6325L20.6403 18.6276L20.234 18.4313C19.2853 17.9876 18.3263 17.6458 17.3571 17.4079C16.2491 17.1359 15.1292 16.9997 13.9997 16.9997ZM13.9997 5.16669C15.1493 5.16669 16.1212 5.57043 16.942 6.3913C17.7629 7.21217 18.1667 8.18401 18.1667 9.33368C18.1666 10.4832 17.7628 11.4553 16.942 12.2761C16.1212 13.0967 15.1492 13.4997 13.9997 13.4997C12.8501 13.4996 11.8781 13.0969 11.0573 12.2761C10.2365 11.4553 9.83372 10.4832 9.83365 9.33368C9.83365 8.18416 10.2366 7.21210 11.0573 6.3913C11.8781 5.57050 12.8501 5.16676 13.9997 5.16669ZM13.9997 6.49969C13.2245 6.49977 12.5485 6.78195 11.9987 7.33173C11.4487 7.88169 11.1667 8.55835 11.1667 9.33368C11.1667 10.1089 11.4488 10.7848 11.9987 11.3347C12.5486 11.8845 13.2245 12.1666 13.9997 12.1667C14.775 12.1667 15.4517 11.8846 16.0016 11.3347C16.5514 10.7848 16.8336 10.1088 16.8336 9.33368C16.8336 8.55835 16.5516 7.88169 16.0016 7.33173C15.4517 6.78176 14.775 6.49969 13.9997 6.49969Z" fill="#1C1B1F" stroke="white"/>
+                          </g>
+                        </svg>
+                        로그인
+                    </a>
+                `;
+                // 로그인하지 않은 경우 글쓰기 버튼 숨기기
+                writeButton.style.display = 'none';
+            }
+
+            // 초기 글 목록 불러오기
+            await fetchPosts();
+
+            // 이벤트 리스너 설정
+            document.getElementById('sortLatest').addEventListener('click', () => {
+                currentSort = 'latest';
+                currentPage = 1;
+                fetchPosts();
+            });
+            document.getElementById('sortPopular').addEventListener('click', () => {
+                currentSort = 'popular';
+                currentPage = 1;
+                fetchPosts();
+            });
+            postSearchInput.addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') {
+                    const query = postSearchInput.value.trim();
+                    if (query) {
+                        window.location.href = `/search.html?q=${encodeURIComponent(query)}`;
+                    }
+                }
+            });
+
+            // 글 목록 불러오기 함수
+            async function fetchPosts(searchQuery = '') {
+                postsTableBody.innerHTML = `<tr><td colspan="4" style="text-align: center;">글을 불러오는 중...</td></tr>`;
+                
+                // 정렬 버튼 활성화/비활성화
+                document.querySelectorAll('.sort-options-bottom button').forEach(button => {
+                    button.classList.remove('active');
+                });
+                document.getElementById(`sort${currentSort.charAt(0).toUpperCase() + currentSort.slice(1)}`).classList.add('active');
+
+                let url = '';
+                let headers = {};
+
+                if (isFollowingOnly && accessToken) {
+                    url = `http://localhost:5001/api/posts/feed?page=${currentPage}&sort=${currentSort}&limit=10`;
+                    headers['Authorization'] = `Bearer ${accessToken}`;
+                } else if (searchQuery) {
+                    url = `http://localhost:5001/api/posts/search?q=${encodeURIComponent(searchQuery)}&page=${currentPage}&limit=10`;
+                } else {
+                    url = `http://localhost:5001/api/posts?page=${currentPage}&sort=${currentSort}&limit=10`;
+                }
+
+                try {
+                    const response = await fetch(url, { headers });
+                    const result = await response.json();
+                    
+                    if (response.ok && result.success) {
+                        const posts = result.data?.posts || [];
+                        const totalCount = result.data?.pagination?.totalPosts || result.data?.pagination?.totalResults || 0;
+                        const totalPages = result.data?.pagination?.totalPages || 0;
+
+                        if (posts.length > 0) {
+                            postsTableBody.innerHTML = '';
+                            posts.forEach(post => {
+                                const row = document.createElement('tr');
+                                row.innerHTML = `
+                                    <td><a href="/post_detail.html?id=${post._id}">${post.title}</a> <span class="post-count">[${post.post_comment_count}]</span></td>
+                                    <td>${post.user_id.nickname}</td>
+                                    <td>${post.created_at_display}</td>
+                                    <td>${post.post_view_count}</td>
+                                `;
+                                postsTableBody.appendChild(row);
+                            });
+                            postCountInfo.textContent = `${totalCount} 개의 글`;
+                            renderPagination(totalPages);
+                        } else {
+                            postsTableBody.innerHTML = `<tr><td colspan="4" style="text-align: center;">글이 없습니다.</td></tr>`;
+                            postCountInfo.textContent = `0 개의 글`;
+                            paginationContainer.innerHTML = '';
+                        }
+                    } else {
+                        console.error('API 응답 오류 또는 데이터 없음:', result.message || '데이터를 불러오지 못했습니다.');
+                        postsTableBody.innerHTML = `<tr><td colspan="4" style="text-align: center;">글을 불러오지 못했습니다.</td></tr>`;
+                        postCountInfo.textContent = `0 개의 글`;
+                        paginationContainer.innerHTML = '';
+                    }
+                } catch (error) {
+                    console.error('글 목록 불러오기 에러:', error);
+                    postsTableBody.innerHTML = `<tr><td colspan="4" style="text-align: center;">글 목록을 불러오지 못했습니다.</td></tr>`;
+                    postCountInfo.textContent = `0 개의 글`;
+                    paginationContainer.innerHTML = '';
+                }
+            }
+
+            // 페이지네이션 렌더링 함수
+            function renderPagination(totalPages) {
+                paginationContainer.innerHTML = '';
+
+                if (totalPages <= 1) {
+                    return; // 1페이지 이하면 페이지네이션 표시 안 함
+                }
+
+                // 이전 페이지 버튼
+                const prevButton = document.createElement('button');
+                prevButton.textContent = '< 이전';
+                prevButton.classList.add('page-button');
+                if (currentPage === 1) {
+                    prevButton.disabled = true;
+                }
+                prevButton.addEventListener('click', () => {
+                    if (currentPage > 1) {
+                        currentPage--;
+                        fetchPosts();
+                    }
+                });
+                paginationContainer.appendChild(prevButton);
+
+                // 페이지 번호 버튼
+                const maxPageButtons = 5;
+                let startPage = Math.max(1, currentPage - Math.floor(maxPageButtons / 2));
+                let endPage = Math.min(totalPages, startPage + maxPageButtons - 1);
+
+                if (endPage - startPage + 1 < maxPageButtons) {
+                    startPage = Math.max(1, endPage - maxPageButtons + 1);
+                }
+
+                for (let i = startPage; i <= endPage; i++) {
+                    const button = document.createElement('button');
+                    button.textContent = i;
+                    button.classList.add('page-button');
+                    if (i === currentPage) {
+                        button.classList.add('active');
+                    }
+                    button.addEventListener('click', () => {
+                        currentPage = i;
+                        fetchPosts();
+                    });
+                    paginationContainer.appendChild(button);
+                }
+
+                // 다음 페이지 버튼
+                const nextButton = document.createElement('button');
+                nextButton.textContent = '다음 >';
+                nextButton.classList.add('page-button');
+                if (currentPage === totalPages) {
+                    nextButton.disabled = true;
+                }
+                nextButton.addEventListener('click', () => {
+                    if (currentPage < totalPages) {
+                        currentPage++;
+                        fetchPosts();
+                    }
+                });
+                paginationContainer.appendChild(nextButton);
+            }
+        });
+    </script>
+</body>
+</html>
