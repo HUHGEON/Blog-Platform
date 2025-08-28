@@ -1,0 +1,451 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>회원가입 - Blog</title>
+    <style>
+        /* Figma 색상 팔레트 적용 */
+        :root {
+            --color-black: #000000;
+            --color-dark-gray: #1C1B1F;
+            --color-white: #FFFFFF;
+            --color-light-gray-1: #D9D9D9;
+            --color-light-gray-2: #8D8989;
+            --color-medium-gray: #BEBEBE;
+            --color-very-light-gray: #F0F2F5;
+            --color-bg-white: #FFFBFB;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            margin: 0;
+            background-color: var(--color-very-light-gray);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+        }
+
+        /* 상단바 (기억해 둔 디자인 적용) */
+        .header {
+            width: 100%;
+            height: 60px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background-color: var(--color-white);
+            border-bottom: 1px solid var(--color-light-gray-1);
+            box-sizing: border-box;
+            padding: 0 20px;
+        }
+        .header-inner {
+            width: 100%;
+            max-width: 1200px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+        .header-logo-group {
+            display: flex;
+            align-items: center;
+            cursor: pointer;
+            text-decoration: none;
+            color: inherit;
+        }
+        .header-logo-group svg {
+            width: 24px;
+            height: 24px;
+            margin-right: 5px;
+            fill: var(--color-black);
+        }
+        .header-logo-group span {
+            font-size: 20px;
+            font-weight: bold;
+            color: var(--color-black);
+        }
+        .header-nav {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            margin-left: 20px;
+        }
+        .header-nav-item {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            text-decoration: none;
+            color: #555;
+            font-size: 14px;
+        }
+        .header-nav-item svg {
+            width: 18px;
+            height: 18px;
+            fill: var(--color-black);
+        }
+        .header-nav-item:hover {
+            color: #3498db;
+        }
+        
+        .header-search {
+            flex-grow: 1;
+            max-width: 500px;
+            margin: 0 120px;
+            position: relative;
+        }
+        .header-search-container {
+            display: flex;
+            align-items: center;
+            width: 100%;
+            padding: 8px 15px;
+            border: 1px solid var(--color-medium-gray);
+            border-radius: 5px;
+            background-color: var(--color-white);
+            box-sizing: border-box;
+        }
+        .header-search-container svg {
+            width: 18px;
+            height: 18px;
+            fill: var(--color-black);
+            margin-right: 8px;
+        }
+        .header-search-container input {
+            width: 100%;
+            border: none;
+            background: none;
+            outline: none;
+            font-size: 14px;
+        }
+        .header-search-container input::placeholder {
+            color: var(--color-light-gray-2);
+        }
+        
+        .header-right {
+            margin-left: auto;
+            display: flex;
+            align-items: center;
+        }
+        .header-right .login-button-top {
+            background-color: var(--color-black);
+            color: var(--color-white);
+            padding: 8px 15px;
+            border: none;
+            border-radius: 5px;
+            font-size: 14px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+        .header-right .login-button-top:hover {
+            background-color: var(--color-dark-gray);
+        }
+        .header-right .login-button-top svg {
+            fill: var(--color-white);
+            width: 18px;
+            height: 18px;
+        }
+        
+        /* 회원가입 페이지 컨테이너 */
+        .page-container {
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            width: 100%;
+        }
+        .signup-box {
+            background-color: var(--color-white);
+            padding: 50px 40px;
+            border-radius: 10px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
+            text-align: center;
+            width: 400px;
+            box-sizing: border-box;
+        }
+        .user-icon-large {
+            width: 70px;
+            height: 70px;
+            margin: 0 auto 20px;
+        }
+        .user-icon-large svg {
+            fill: var(--color-black);
+        }
+        .signup-box h2 {
+            font-size: 28px;
+            color: var(--color-black);
+            margin-bottom: 40px;
+            font-weight: normal;
+        }
+        .input-group {
+            margin-bottom: 20px;
+            text-align: left;
+        }
+        .input-group label {
+            display: block;
+            margin-bottom: 8px;
+            color: var(--color-dark-gray);
+            font-size: 14px;
+            font-weight: bold;
+        }
+        .input-group input {
+            width: 100%;
+            padding: 12px 15px;
+            border: 1px solid var(--color-medium-gray);
+            border-radius: 5px;
+            box-sizing: border-box;
+            font-size: 16px;
+            transition: border-color 0.3s;
+            background-color: var(--color-light-gray-1);
+        }
+        .input-group input::placeholder {
+            color: var(--color-light-gray-2);
+        }
+        .input-group input:focus {
+            outline: none;
+            border-color: #3498db;
+        }
+        .message-area {
+            height: 20px;
+            line-height: 20px;
+            margin-bottom: 20px;
+            color: #e74c3c;
+            font-size: 14px;
+        }
+        .signup-button {
+            width: 100%;
+            padding: 15px;
+            border: none;
+            border-radius: 5px;
+            font-size: 16px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+            font-weight: bold;
+            background-color: var(--color-dark-gray);
+            color: var(--color-white);
+        }
+        .signup-button:hover {
+            background-color: var(--color-black);
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div class="header-inner">
+            <div class="header-left">
+                <a href="/" class="header-logo-group">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 48 48" fill="none">
+                      <mask id="mask0_5_1247" style="mask-type:alpha" maskUnits="userSpaceOnUse" x="0" y="0" width="48" height="48">
+                        <rect x="0.5" y="0.5" width="47" height="47" fill="#D9D9D9" stroke="#BEBEBE"/>
+                      </mask>
+                      <g mask="url(#mask0_5_1247)">
+                        <path d="M8 4.5H40C40.9663 4.5 41.7814 4.83801 42.4717 5.52832C43.162 6.21863 43.5 7.03366 43.5 8V32C43.5 32.9663 43.162 33.7814 42.4717 34.4717C41.7814 35.162 40.9663 35.5 40 35.5H11.793L4.5 42.793V8C4.5 7.03366 4.83801 6.21863 5.52832 5.52832C6.21863 4.83801 7.03366 4.5 8 4.5ZM7.5 35.4385L8.34961 34.6074L10.5039 32.5H40.5V7.5H7.5V35.4385Z" fill="#1C1B1F" stroke="#BEBEBE"/>
+                      </g>
+                    </svg>
+                    <span>Blog</span>
+                </a>
+                <div class="header-nav">
+                    <a href="/" class="header-nav-item">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="30" height="28" viewBox="0 0 30 28" fill="none">
+                          <mask id="mask0_5_1244" style="mask-type:alpha" maskUnits="userSpaceOnUse" x="0" y="0" width="30" height="28">
+                            <rect width="30" height="28" fill="#D9D9D9"/>
+                          </mask>
+                          <g mask="url(#mask0_5_1244)">
+                            <path d="M7.75428 22.4533H11.3771V15.2076H18.6228V22.4533H22.2457V11.5848L15 6.15051L7.75428 11.5848V22.4533ZM5.33905 24.8685V10.3772L15 3.13147L24.6609 10.3772V24.8685H16.2076V17.6228H13.7924V24.8685H5.33905Z" fill="#1C1B1F"/>
+                          </g>
+                        </svg>
+                        홈
+                    </a>
+                    <a href="/posts.html" class="header-nav-item">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 28 28" fill="none">
+                          <mask id="mask0_5_1251" style="mask-type:alpha" maskUnits="userSpaceOnUse" x="0" y="0" width="28" height="28">
+                            <rect width="28" height="28" fill="#D9D9D9"/>
+                          </mask>
+                          <g mask="url(#mask0_5_1251)">
+                            <path d="M8.16667 19.8333H16.3333V17.5H8.16667V19.8333ZM8.16667 15.1667H19.8333V12.8333H8.16667V15.1667ZM8.16667 10.5H19.8333V8.16667H8.16667V10.5ZM5.83333 24.5C5.19167 24.5 4.64236 24.2715 4.18542 23.8146C3.72847 23.3576 3.5 22.8083 3.5 22.1667V5.83333C3.5 5.19167 3.72847 4.64236 4.18542 4.18542C4.64236 3.72847 5.19167 3.5 5.83333 3.5H22.1667C22.8083 3.5 23.3576 3.72847 23.8146 4.18542C24.2715 4.64236 24.5 5.19167 24.5 5.83333V22.1667C24.5 22.8083 24.2715 23.3576 23.8146 23.8146C23.3576 24.2715 22.8083 24.5 22.1667 24.5H5.83333ZM5.83333 22.1667H22.1667V5.83333H5.83333V22.1667Z" fill="#1C1B1F"/>
+                          </g>
+                        </svg>
+                        글 목록
+                    </a>
+                </div>
+            </div>
+            <div class="header-search">
+                <div class="header-search-container">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="19" height="19" viewBox="0 0 19 19" fill="none">
+                      <mask id="mask0_5_1264" style="mask-type:alpha" maskUnits="userSpaceOnUse" x="0" y="0" width="19" height="19">
+                        <rect width="19" height="19" fill="#D9D9D9"/>
+                      </mask>
+                      <g mask="url(#mask0_5_1264)">
+                        <path d="M15.5167 16.625L10.5292 11.6375C10.1333 11.9542 9.67812 12.2049 9.16354 12.3896C8.64896 12.5743 8.10139 12.6667 7.52083 12.6667C6.08264 12.6667 4.86545 12.1686 3.86927 11.1724C2.87309 10.1762 2.375 8.95903 2.375 7.52083C2.375 6.08264 2.87309 4.86545 3.86927 3.86927C4.86545 2.87309 6.08264 2.375 7.52083 2.375C8.95903 2.375 10.1762 2.87309 11.1724 3.86927C12.1686 4.86545 12.6667 6.08264 12.6667 7.52083C12.6667 8.10139 12.5743 8.64896 12.3896 9.16354C12.2049 9.67812 11.9542 10.1333 11.6375 10.5292L16.625 15.5167L15.5167 16.625ZM7.52083 11.0833C8.51042 11.0833 9.35156 10.737 10.0443 10.0443C10.737 9.35156 11.0833 8.51042 11.0833 7.52083C11.0833 6.53125 10.737 5.6901 10.0443 4.9974C9.35156 4.30469 8.51042 3.95833 7.52083 3.95833C6.53125 3.95833 5.6901 4.30469 4.9974 4.9974C4.30469 5.6901 3.95833 6.53125 3.95833 7.52083C3.95833 8.51042 4.30469 9.35156 4.9974 10.0443C5.6901 10.737 6.53125 11.0833 7.52083 11.0833Z" fill="#1C1B1F"/>
+                      </g>
+                    </svg>
+                    <input type="text" id="searchInput" placeholder="검색...">
+                </div>
+            </div>
+            <div class="header-right">
+                <a href="/login.html" class="login-button-top" id="topLoginButton">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 28 28" fill="none">
+                      <mask id="mask0_5_1257" style="mask-type:alpha" maskUnits="userSpaceOnUse" x="0" y="0" width="28" height="28">
+                        <rect x="0.5" y="0.5" width="27" height="27" fill="#D9D9D9" stroke="white"/>
+                      </mask>
+                      <g mask="url(#mask0_5_1257)">
+                        <path d="M13.9997 15.6667C15.2433 15.6667 16.4678 15.8132 17.6735 16.1052C18.8771 16.3967 20.0646 16.8345 21.236 17.4196H21.237C21.7179 17.6684 22.1033 18.027 22.3971 18.5056C22.6881 18.9796 22.8336 19.4968 22.8336 20.0671V22.8337H5.16666V20.0671L5.17349 19.8552C5.20532 19.3677 5.34852 18.9203 5.60318 18.5056C5.89698 18.0271 6.28152 17.6674 6.76236 17.4186C7.93399 16.8333 9.12199 16.3967 10.3258 16.1052C11.5316 15.8132 12.756 15.6667 13.9997 15.6667ZM13.9997 16.9997C12.8703 16.9997 11.7511 17.136 10.6432 17.4079C9.53547 17.6798 8.441 18.0872 7.36002 18.6276L7.35025 18.6325L7.34048 18.6384C7.08831 18.7785 6.88479 18.9758 6.73404 19.2224C6.57701 19.4793 6.49966 19.7653 6.49966 20.0671V21.4997H21.4997V20.0671C21.4997 19.7653 21.4233 19.4793 21.2663 19.2224C21.1156 18.9758 20.9119 18.7785 20.6598 18.6384L20.6501 18.6325L20.6403 18.6276L20.234 18.4313C19.2853 17.9876 18.3263 17.6458 17.3571 17.4079C16.2491 17.1359 15.1292 16.9997 13.9997 16.9997ZM13.9997 5.16669C15.1493 5.16669 16.1212 5.57043 16.942 6.3913C17.7629 7.21217 18.1667 8.18401 18.1667 9.33368C18.1666 10.4832 17.7628 11.4553 16.942 12.2761C16.1212 13.0967 15.1492 13.4997 13.9997 13.4997C12.8501 13.4996 11.8781 13.0969 11.0573 12.2761C10.2365 11.4553 9.83372 10.4832 9.83365 9.33368C9.83365 8.18416 10.2366 7.2121 11.0573 6.3913C11.8781 5.5705 12.8501 5.16676 13.9997 5.16669ZM13.9997 6.49969C13.2245 6.49977 12.5485 6.78195 11.9987 7.33173C11.4487 7.88169 11.1667 8.55835 11.1667 9.33368C11.1667 10.1089 11.4488 10.7848 11.9987 11.3347C12.5486 11.8845 13.2245 12.1666 13.9997 12.1667C14.775 12.1667 15.4517 11.8846 16.0016 11.3347C16.5514 10.7848 16.8336 10.1088 16.8336 9.33368C16.8336 8.55835 16.5516 7.88169 16.0016 7.33173C15.4517 6.78176 14.775 6.49969 13.9997 6.49969Z" fill="#1C1B1F" stroke="white"/>
+                      </g>
+                    </svg>
+                    로그인
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <div class="page-container">
+        <div class="signup-box">
+            <div class="user-icon-large">
+                <svg xmlns="http://www.w3.org/2000/svg" width="70" height="90" viewBox="0 0 70 90" fill="none">
+                  <mask id="mask0_5_506" style="mask-type:alpha" maskUnits="userSpaceOnUse" x="0" y="0" width="70" height="90">
+                    <rect x="0.5" y="0.5" width="69" height="89" fill="#D9D9D9" stroke="#040404"/>
+                  </mask>
+                  <g mask="url(#mask0_5_506)">
+                    <path d="M34.9995 48.8071C38.5978 48.8071 42.1414 49.2297 45.6304 50.0746C49.1172 50.9191 52.5528 52.1853 55.9361 53.8764V53.8774C57.4516 54.6613 58.6663 55.7961 59.5845 57.2914C60.4999 58.7823 60.9575 60.4144 60.9575 62.1977V70.9575H9.0425V62.1977C9.0425 60.4144 9.50012 58.7823 10.4155 57.2914C11.3337 55.7962 12.5475 54.6603 14.063 53.8764C17.4465 52.1852 20.8825 50.9192 24.3696 50.0746C27.8584 49.2297 31.4014 48.8071 34.9995 48.8071ZM34.9995 54.4213C31.8724 54.4214 28.7735 54.7987 25.7036 55.5522C22.6336 56.3057 19.594 57.4351 16.5864 58.9389L16.5767 58.9438L16.5679 58.9487C15.9945 59.2672 15.5321 59.7149 15.1851 60.2827C14.8318 60.8607 14.6568 61.5035 14.6568 62.1977V65.3432H55.3433V62.1977C55.3433 61.5035 55.1682 60.8607 54.815 60.2827C54.4679 59.7149 54.0055 59.2672 53.4321 58.9487L53.4234 58.9438L53.4136 58.9389L52.8491 58.6616C50.0258 57.2956 47.1746 56.2587 44.2964 55.5522C41.2263 54.7986 38.1268 54.4213 34.9995 54.4213ZM34.9995 19.0424C38.5036 19.0424 41.4912 20.2843 43.9888 22.7817C46.4863 25.2792 47.729 28.2668 47.729 31.7709C47.729 35.2752 46.4864 38.2626 43.9888 40.7602C41.4912 43.2577 38.5037 44.4995 34.9995 44.4995C31.4955 44.4993 28.5078 43.2577 26.0103 40.7602C23.5129 38.2627 22.271 35.275 22.271 31.7709C22.2711 28.2668 23.5128 25.2792 26.0103 22.7817C28.5078 20.2842 31.4955 19.0425 34.9995 19.0424ZM34.9995 24.6567C33.0471 24.6568 31.3633 25.3583 29.9751 26.7465C28.5869 28.1348 27.8853 29.8185 27.8853 31.7709C27.8853 33.7236 28.5868 35.408 29.9751 36.7963C31.3633 38.1845 33.0472 38.8851 34.9995 38.8852C36.9521 38.8852 38.6366 38.1846 40.0249 36.7963C41.4133 35.408 42.1148 33.7236 42.1148 31.7709C42.1147 29.8185 41.4131 28.1348 40.0249 26.7465C38.6366 25.3582 36.9521 24.6567 34.9995 24.6567Z" fill="#1C1B1F" stroke="#040404"/>
+                  </g>
+                </svg>
+            </div>
+            <h2>회원가입</h2>
+            <form id="signupForm">
+                <div class="input-group">
+                    <label for="name">이름</label>
+                    <input type="text" id="name" name="name" placeholder="이름을 입력해 주세요">
+                </div>
+                <div class="input-group">
+                    <label for="id">아이디</label>
+                    <input type="text" id="id" name="id" placeholder="아이디는 3~10자, 영문/숫자">
+                </div>
+                <div class="input-group">
+                    <label for="pw">비밀번호</label>
+                    <input type="password" id="pw" name="pw" placeholder="비밀번호는 8~15자, 영문/숫자">
+                </div>
+                <div class="input-group">
+                    <label for="pw_check">비밀번호 확인</label>
+                    <input type="password" id="pw_check" name="pw_check" placeholder="비밀번호를 다시 입력해 주세요">
+                </div>
+                <div class="input-group">
+                    <label for="nickname">닉네임</label>
+                    <input type="text" id="nickname" name="nickname" placeholder="닉네임은 2~10자">
+                </div>
+                <div class="input-group">
+                    <label for="birth_date">생년월일</label>
+                    <input type="date" id="birth_date" name="birth_date">
+                </div>
+                <div class="message-area" id="message"></div>
+                <button type="submit" class="signup-button">회원가입</button>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const signupForm = document.getElementById('signupForm');
+            const nameInput = document.getElementById('name');
+            const idInput = document.getElementById('id');
+            const pwInput = document.getElementById('pw');
+            const pwCheckInput = document.getElementById('pw_check');
+            const nicknameInput = document.getElementById('nickname');
+            const birthDateInput = document.getElementById('birth_date');
+            const messageDiv = document.getElementById('message');
+
+            // DB 제약 조건에 따른 정규식
+            const idRegex = /^[a-zA-Z0-9]{3,10}$/;
+            const pwRegex = /^[a-zA-Z0-9]{8,15}$/;
+            const nicknameRegex = /^.{2,10}$/;
+
+            // 상단바 검색 기능
+            const searchInput = document.getElementById('searchInput');
+            searchInput.addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') {
+                    const query = searchInput.value.trim();
+                    if (query) {
+                        window.location.href = `/search.html?q=${encodeURIComponent(query)}`;
+                    }
+                }
+            });
+
+            signupForm.addEventListener('submit', async (e) => {
+                e.preventDefault();
+                messageDiv.textContent = ''; 
+
+                const name = nameInput.value.trim();
+                const id = idInput.value.trim();
+                const pw = pwInput.value.trim();
+                const pwCheck = pwCheckInput.value.trim();
+                const nickname = nicknameInput.value.trim();
+                const birthDateString = birthDateInput.value;
+
+                // 프론트엔드 유효성 검증
+                if (!name || !id || !pw || !pwCheck || !nickname || !birthDateString) {
+                    messageDiv.textContent = '모든 필드를 입력해 주세요.';
+                    return;
+                }
+                if (!idRegex.test(id)) {
+                    messageDiv.textContent = '아이디는 3~10자의 영문자와 숫자만 사용 가능합니다.';
+                    return;
+                }
+                if (pw !== pwCheck) {
+                    messageDiv.textContent = '비밀번호와 비밀번호 확인이 일치하지 않습니다.';
+                    return;
+                }
+                if (!pwRegex.test(pw)) {
+                    messageDiv.textContent = '비밀번호는 8~15자의 영문자와 숫자만 사용 가능합니다.';
+                    return;
+                }
+                if (!nicknameRegex.test(nickname)) {
+                    messageDiv.textContent = '닉네임은 2~10자 이내로 입력해 주세요.';
+                    return;
+                }
+                
+                // 백엔드 날짜 유효성 검증과 동일
+                const birthDate = new Date(birthDateString);
+                if (isNaN(birthDate.getTime()) || birthDate > new Date()) {
+                    messageDiv.textContent = '올바른 생년월일을 입력해 주세요.';
+                    return;
+                }
+
+                try {
+                    const response = await fetch('http://localhost:5001/api/auths/signup', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({
+                            id,
+                            pw,
+                            name,
+                            nickname,
+                            birth_date: birthDateString
+                        })
+                    });
+                    
+                    const result = await response.json();
+
+                    if (response.ok) {
+                        alert(result.message);
+                        window.location.href = '/login.html'; 
+                    } else {
+                        messageDiv.textContent = result.message;
+                    }
+                } catch (error) {
+                    console.error('회원가입 에러:', error);
+                    messageDiv.textContent = '서버에 연결할 수 없습니다.';
+                }
+            });
+        });
+    </script>
+</body>
+</html>
