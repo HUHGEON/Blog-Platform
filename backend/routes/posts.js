@@ -11,7 +11,7 @@ const router = express.Router();
 
 // 한국 시간 24시간 형식 함수
 const format_korean_time = (date) => {
-  return moment(date).tz('Asia/Seoul').format('YYYY년 MM월 DD일 HH시 mm분');
+  return moment(date).tz('Asia/Seoul').format('YYYY-MM-DD');
 };
 
 // 게시글 작성
