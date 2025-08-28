@@ -148,6 +148,7 @@ router.post('/login', async (req, res) => {
       message: '로그인 성공',
       data: {
         user: {
+          _id: user._id,
           id: user.id,
           nickname: user.nickname,
           name: user.name

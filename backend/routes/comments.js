@@ -36,16 +36,6 @@ router.post('/', authenticateToken, async (req, res) => {
 
     await new_comment.save();
 
-    // 사용자 댓글 수 증가
-    await User.findByIdAndUpdate(user_id, {
-      $inc: { user_comment_count: 1 }
-    });
-
-    // 게시글 댓글 수 증가
-    await Post.findByIdAndUpdate(post_id, {
-      $inc: { post_comment_count: 1 }
-    });
-
     res.status(HTTP_STATUS.CREATED).json({
       success: true,
       message: '댓글이 등록되었습니다',

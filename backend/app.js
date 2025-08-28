@@ -27,8 +27,14 @@ const app = express();
 const PORT = process.env.PORT || 5001;
 
 // 미들웨어 설정
-app.use(helmet()); // 보안 헤더 설정
-app.use(cors()); // CORS 허용
+app.use(helmet.crossOriginResourcePolicy({ policy: 'cross-origin' }));
+app.use(cors({
+  origin: [
+    'http://localhost:5002',  
+    'http://127.0.0.1:5002'  
+  ],
+  credentials: true
+})); // CORS 허용
 app.use(express.json()); // JSON 파싱
 app.use(express.urlencoded({ extended: true })); // URL 인코딩
 
