@@ -235,14 +235,15 @@ router.get('/:userId/posts', async (req, res) => {
   }
 });
 
-// 팔로워 목록 조회
+
+// 팔로워 목록 조회 (페이지네이션 적용)
 router.get('/:userId/followers', async (req, res) => {
   try {
     const { userId } = req.params;
+    const page = parseInt(req.query.page) || 1;
     const limit = parseInt(req.query.limit) || 10;
-    const lastId = req.query.lastId;
+    const skip = (page - 1) * limit;
 
-    // 사용자 존재 확인
     const user = await User.findById(userId).select('nickname followers'); 
     if (!user) {
       return res.status(HTTP_STATUS.NOT_FOUND).json({
@@ -251,35 +252,32 @@ router.get('/:userId/followers', async (req, res) => {
       });
     }
 
-    // 팔로워 목록 조회 
-    let query = { _id: { $in: user.followers || [] } };
-    
-    if (lastId) {
-      query._id = { 
-        $in: user.followers || [],
-        $lt: new mongoose.Types.ObjectId(lastId) 
-      };
-    }
+    const totalFollowers = user.followers.length;
+    const totalPages = Math.ceil(totalFollowers / limit);
 
-    const followers = await User.find(query)
+    const followers = await User.find({ _id: { $in: user.followers } })
       .select('nickname profile_image_url')
       .sort({ _id: -1 })
-      .limit(limit + 1);
-
-    const hasMore = followers.length > limit;
-    const followersToReturn = hasMore ? followers.slice(0, -1) : followers;
+      .skip(skip)
+      .limit(limit);
 
     res.status(HTTP_STATUS.OK).json({
       success: true,
       message: '팔로워 목록 조회 성공',
       data: {
-        followers: followersToReturn.map(follower => ({
+        followers: followers.map(follower => ({
           id: follower._id,
           nickname: follower.nickname,
           profile_image_url: follower.profile_image_url
         })),
-        hasMore: hasMore,
-        lastId: followersToReturn.length > 0 ? followersToReturn[followersToReturn.length - 1]._id : null,
+        pagination: {
+          currentPage: page,
+          totalPages: totalPages,
+          totalResults: totalFollowers,
+          limit,
+          hasNextPage: page < totalPages,
+          hasPrevPage: page > 1
+        },
         user: {
           id: user._id,
           nickname: user.nickname
@@ -296,14 +294,15 @@ router.get('/:userId/followers', async (req, res) => {
   }
 });
 
-// 팔로잉 목록 조회 (커서 기반)
+
+// 팔로잉 목록 조회 (페이지네이션 적용)
 router.get('/:userId/following', async (req, res) => {
   try {
     const { userId } = req.params;
+    const page = parseInt(req.query.page) || 1;
     const limit = parseInt(req.query.limit) || 10;
-    const lastId = req.query.lastId;    //mongoDB의 OBJECTID의 성질을 이용 늦게 만들어질 수록 숫자가 큼
+    const skip = (page - 1) * limit;
 
-    // 사용자 존재 확인 
     const user = await User.findById(userId).select('nickname following');
     if (!user) {
       return res.status(HTTP_STATUS.NOT_FOUND).json({
@@ -311,35 +310,33 @@ router.get('/:userId/following', async (req, res) => {
         message: '존재하지 않는 사용자입니다'
       });
     }
-
-    let query = { _id: { $in: user.following || [] } };
     
-    if (lastId) {
-      query._id = { 
-        $in: user.following || [],                  //$in 하나라도 일치하면 추출
-        $lt: new mongoose.Types.ObjectId(lastId)    //$it 보다 작은 ID
-      };
-    }
+    const totalFollowing = user.following.length;
+    const totalPages = Math.ceil(totalFollowing / limit);
 
-    const following = await User.find(query)
+    const following = await User.find({ _id: { $in: user.following } })
       .select('nickname profile_image_url')
       .sort({ _id: -1 })
-      .limit(limit + 1);
-
-    const hasMore = following.length > limit;
-    const followingToReturn = hasMore ? following.slice(0, -1) : following;
+      .skip(skip)
+      .limit(limit);
 
     res.status(HTTP_STATUS.OK).json({
       success: true,
       message: '팔로잉 목록 조회 성공',
       data: {
-        following: followingToReturn.map(followingUser => ({
+        following: following.map(followingUser => ({
           id: followingUser._id,
           nickname: followingUser.nickname,
           profile_image_url: followingUser.profile_image_url
         })),
-        hasMore: hasMore,
-        lastId: followingToReturn.length > 0 ? followingToReturn[followingToReturn.length - 1]._id : null,
+        pagination: {
+          currentPage: page,
+          totalPages: totalPages,
+          totalResults: totalFollowing,
+          limit,
+          hasNextPage: page < totalPages,
+          hasPrevPage: page > 1
+        },
         user: {
           id: user._id,
           nickname: user.nickname
@@ -355,6 +352,7 @@ router.get('/:userId/following', async (req, res) => {
     });
   }
 });
+
 
 // 사용자 프로필 이미지 수정 (업로드)
 router.put('/:userId/profile/image', authenticateToken, upload.single('image'), async (req, res) => {
