@@ -3,10 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>팔로잉 목록 - Blog</title>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
+    <title>스토리 만들기 - Blog</title>
     <style>
-        /* CSS는 followers.html과 동일하게 복사해서 사용 */
+        /* Figma 색상 팔레트 */
         :root {
             --color-black: #000000;
             --color-dark-gray: #1C1B1F;
@@ -26,6 +25,8 @@
             align-items: center;
             min-height: 100vh;
         }
+
+        /* 상단바 */
         .header {
             width: 100%;
             height: 60px;
@@ -92,6 +93,7 @@
         .header-nav-item:hover svg {
             fill: #3498db;
         }
+        
         .header-search {
             flex-grow: 1;
             max-width: 500px;
@@ -124,6 +126,7 @@
         .header-search-container input::placeholder {
             color: var(--color-light-gray-2);
         }
+        
         .header-right {
             margin-left: auto;
             display: flex;
@@ -220,6 +223,8 @@
         .header-right .logout-button:hover svg path {
             fill: #3498db;
         }
+
+        /* 메인 컨텐츠 */
         .main-container {
             width: 100%;
             max-width: 1200px;
@@ -227,111 +232,119 @@
             box-sizing: border-box;
             display: flex;
             flex-direction: column;
-            align-items: center;
+            gap: 20px;
         }
-        .list-box {
+
+        /* 스토리 작성 섹션 */
+        .story-create-section {
             background-color: var(--color-white);
             border-radius: 10px;
             box-shadow: 0 2px 10px rgba(0,0,0,0.05);
             padding: 30px;
-            width: 100%;
-            max-width: 600px;
-            box-sizing: border-box;
-        }
-        .list-header {
-            text-align: center;
-            font-size: 24px;
-            color: var(--color-black);
-            margin-bottom: 30px;
-            font-weight: bold;
-        }
-        .list-items {
             display: flex;
             flex-direction: column;
-            gap: 15px;
+            gap: 20px;
         }
-        .list-item {
+        .story-create-header {
             display: flex;
-            align-items: center;
             justify-content: space-between;
-            background-color: var(--color-very-light-gray);
-            border-radius: 8px;
-            padding: 15px;
-            text-decoration: none;
-            color: inherit;
-        }
-        .list-item-left {
-            display: flex;
-            align-items: center;
-            gap: 15px;
-        }
-        .profile-icon {
-            width: 50px;
-            height: 50px;
-            background-color: var(--color-light-gray-1);
-            border-radius: 50%;
-            overflow: hidden;
-            flex-shrink: 0;
-            display: flex;
-            justify-content: center;
             align-items: center;
         }
-        .profile-icon img {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
+        .story-create-header h2 {
+            font-size: 28px;
+            color: var(--color-black);
+            margin: 0;
+            font-weight: normal;
         }
-        .nickname {
+        .submit-button {
+            background-color: var(--color-dark-gray);
+            color: var(--color-white);
+            padding: 8px 15px;
+            border: none;
+            border-radius: 5px;
+            font-size: 14px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+        .submit-button:hover {
+            background-color: var(--color-black);
+        }
+        .input-group {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+        .input-group label {
             font-size: 16px;
             font-weight: bold;
             color: var(--color-black);
         }
-        .message-button {
-            background: none;
-            border: none;
-            color: var(--color-dark-gray);
-            font-size: 14px;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            gap: 5px;
-            transition: color 0.2s;
-        }
-        .message-button:hover {
-            color: #3498db;
-        }
-        .message-button svg {
-            width: 18px;
-            height: 18px;
-            fill: currentColor;
-        }
-        .pagination {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            margin-top: 20px;
-            gap: 5px;
-        }
-        .pagination button {
-            background-color: var(--color-white);
+        .input-group input[type="text"],
+        .input-group input[type="file"],
+        .input-group textarea {
+            width: 100%;
+            padding: 12px 15px;
             border: 1px solid var(--color-medium-gray);
-            color: var(--color-dark-gray);
-            padding: 8px 12px;
             border-radius: 5px;
-            cursor: pointer;
-            transition: background-color 0.2s, color 0.2s;
-            font-size: 14px;
+            box-sizing: border-box;
+            font-size: 16px;
+            background-color: var(--color-very-light-gray);
+            transition: border-color 0.3s;
         }
-        .pagination button.active {
+        .input-group input[type="text"]:focus,
+        .input-group textarea:focus {
+            outline: none;
+            border-color: #3498db;
+        }
+        .input-group input::placeholder,
+        .input-group textarea::placeholder {
+            color: var(--color-light-gray-2);
+        }
+        .input-group input[type="text"] {
+            padding: 12px 15px;
+        }
+        .message-area {
+            height: 20px;
+            line-height: 20px;
+            margin-top: 10px;
+            color: #e74c3c;
+            font-size: 14px;
+            text-align: center;
+        }
+        .image-upload-group {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .image-upload-group input[type="file"] {
+            display: none; /* 실제 파일 입력 필드는 숨김 */
+        }
+        .image-upload-group .file-name-display {
+            flex-grow: 1;
+            padding: 12px 15px;
+            border: 1px solid var(--color-medium-gray);
+            border-radius: 5px;
+            background-color: var(--color-very-light-gray);
+            color: var(--color-light-gray-2);
+            font-size: 16px;
+            cursor: default;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        .image-upload-group button {
             background-color: var(--color-dark-gray);
             color: var(--color-white);
+            padding: 12px 20px;
+            border: none;
+            border-radius: 5px;
+            font-size: 14px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+            flex-shrink: 0;
         }
-        .pagination button:not(.active):hover {
-            background-color: var(--color-very-light-gray);
-        }
-        .pagination button:disabled {
-            cursor: not-allowed;
-            opacity: 0.5;
+        .image-upload-group button:hover {
+            background-color: var(--color-black);
         }
     </style>
 </head>
@@ -392,39 +405,50 @@
                 </div>
         </div>
     </div>
-    
+
     <div class="main-container">
-        <h2 id="listHeader"></h2>
-        <div class="list-box">
-            <div class="list-items" id="followingList">
-                </div>
-        </div>
-        <div class="pagination" id="pagination">
+        <div class="story-create-section">
+            <div class="story-create-header">
+                <h2>Story 만들기</h2>
+                <button id="createStoryButton" class="submit-button">등록</button>
             </div>
+            <div class="input-group">
+                <label for="storyContentInput">내용</label>
+                <input type="text" id="storyContentInput" placeholder="스토리 내용을 입력해주세요" maxlength="20">
+            </div>
+            <div class="input-group">
+                <label>이미지</label>
+                <div class="image-upload-group">
+                    <input type="file" id="storyImageInput" accept="image/jpeg, image/png, image/jpg">
+                    <span id="fileNameDisplay" class="file-name-display">파일을 선택해 주세요</span>
+                    <button id="selectImageButton">이미지 선택</button>
+                </div>
+            </div>
+            <div class="message-area" id="messageArea"></div>
+        </div>
     </div>
-    
+
     <script>
         document.addEventListener('DOMContentLoaded', async () => {
-            const urlParams = new URLSearchParams(window.location.search);
-            const userId = urlParams.get('userId');
-
-            if (!userId) {
-                alert('사용자 ID가 없습니다.');
-                window.location.href = '/';
-                return;
-            }
-
             const accessToken = localStorage.getItem('accessToken');
+            const userId = localStorage.getItem('userId');
             const userNickname = localStorage.getItem('userNickname');
-            const currentUserId = localStorage.getItem('userId');
             const headerRight = document.getElementById('headerRight');
             const searchInput = document.getElementById('searchInput');
 
-            const listHeader = document.getElementById('listHeader');
-            const followingList = document.getElementById('followingList');
-            const paginationContainer = document.getElementById('pagination');
+            const storyContentInput = document.getElementById('storyContentInput');
+            const storyImageInput = document.getElementById('storyImageInput');
+            const fileNameDisplay = document.getElementById('fileNameDisplay');
+            const selectImageButton = document.getElementById('selectImageButton');
+            const createStoryButton = document.getElementById('createStoryButton');
+            const messageArea = document.getElementById('messageArea');
 
-            let currentPage = 1;
+            // 로그인 여부 확인
+            if (!accessToken) {
+                alert('로그인 후 스토리를 작성할 수 있습니다.');
+                window.location.href = '/login.html';
+                return;
+            }
 
             // 상단바 검색 기능
             if (searchInput) {
@@ -440,7 +464,7 @@
 
             // 상단바 렌더링
             function renderHeader() {
-                if (accessToken && userNickname && currentUserId) {
+                if (accessToken && userNickname) {
                     headerRight.innerHTML = `
                         <div class="logged-in-menu">
                             <a href="/post_write.html" class="nav-item-logged-in">
@@ -460,7 +484,7 @@
                                 </svg>
                                 쪽지
                             </a>
-                            <a href="/user_page.html?userId=${currentUserId}" class="user-profile-group">
+                            <a href="/user_page.html?userId=${userId}" class="user-profile-group">
                                 <div class="profile-icon">
                                     <img src="https://placehold.co/30x30/d9d9d9/555555?text=P" alt="Profile">
                                 </div>
@@ -504,110 +528,80 @@
             }
             renderHeader();
 
-            // 팔로잉 목록 불러오기
-            async function fetchFollowing() {
-                followingList.innerHTML = '<p style="text-align: center; color: #8D8989;">팔로잉 목록을 불러오는 중...</p>';
+            // 스토리 작성 버튼 클릭 이벤트
+            createStoryButton.addEventListener('click', async () => {
+                messageArea.textContent = ''; // 메시지 초기화
+
+                const content = storyContentInput.value.trim();
+                const imageFile = storyImageInput.files[0];
+
+                // 클라이언트 측 유효성 검사
+                if (!content) {
+                    messageArea.textContent = '스토리 내용을 입력해 주세요.';
+                    return;
+                }
+                if (content.length > 20) {
+                    messageArea.textContent = '스토리 내용은 20자 이하여야 합니다.';
+                    return;
+                }
+                if (!imageFile) {
+                    messageArea.textContent = '스토리 이미지를 등록해 주세요.';
+                    return;
+                }
+
+                // 이미지 파일 유효성 검사 (크기 및 형식)
+                const allowedTypes = ['image/jpeg', 'image/png', 'image/jpg'];
+                const maxSize = 5 * 1024 * 1024; // 5MB
+
+                if (!allowedTypes.includes(imageFile.type)) {
+                    messageArea.textContent = '이미지 파일은 JPG, JPEG, PNG 형식만 가능합니다.';
+                    return;
+                }
+                if (imageFile.size > maxSize) {
+                    messageArea.textContent = '이미지 크기는 5MB 이하여야 합니다.';
+                    return;
+                }
+
+                const formData = new FormData();
+                formData.append('content', content);
+                formData.append('image', imageFile);
+
                 try {
-                    const response = await fetch(`http://localhost:5001/api/users/${userId}/following?page=${currentPage}&limit=10`);
+                    const response = await fetch('http://localhost:5001/api/stories', {
+                        method: 'POST',
+                        headers: {
+                            'Authorization': `Bearer ${accessToken}`
+                        },
+                        body: formData
+                    });
+                    
                     const result = await response.json();
 
                     if (response.ok && result.success) {
-                        const { following, user, pagination } = result.data;
-                        listHeader.textContent = `${user.nickname}가 팔로잉하는 사용자 (${pagination.totalResults}명)`;
-                        followingList.innerHTML = '';
-
-                        if (following.length > 0) {
-                            following.forEach(followingUser => {
-                                const listItem = document.createElement('div');
-                                listItem.classList.add('list-item');
-                                listItem.innerHTML = `
-                                    <a href="/user_page.html?userId=${followingUser.id}" class="list-item-left">
-                                        <div class="profile-icon">
-                                            <img src="${followingUser.profile_image_url ? `http://localhost:5001${followingUser.profile_image_url}` : 'https://placehold.co/50x50/d9d9d9/555555?text=P'}" alt="${followingUser.nickname} 프로필">
-                                        </div>
-                                        <span class="nickname">${followingUser.nickname}</span>
-                                    </a>
-                                    ${accessToken ? `
-                                    <button class="message-button" onclick="location.href='/message.html?receiverId=${followingUser.id}&receiverNickname=${followingUser.nickname}'">
-                                        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 16 16" fill="none">
-                                            <mask id="mask0_msg" style="mask-type:alpha" maskUnits="userSpaceOnUse" x="0" y="0" width="16" height="16">
-                                                <rect width="16" height="16" fill="#D9D9D9"/>
-                                            </mask>
-                                            <g mask="url(#mask0_msg)">
-                                                <path d="M2.66683 13.3334C2.30016 13.3334 1.98627 13.2028 1.72516 12.9417C1.46405 12.6806 1.3335 12.3667 1.3335 12V4.00002C1.3335 3.63335 1.46405 3.31946 1.72516 3.05835C1.98627 2.79724 2.30016 2.66669 2.66683 2.66669H13.3335C13.7002 2.66669 14.0141 2.79724 14.2752 3.05835C14.5363 3.31946 14.6668 3.63335 14.6668 4.00002V12C14.6668 12.3667 14.5363 12.6806 14.2752 12.9417C14.0141 13.2028 13.7002 13.3334 13.3335 13.3334H2.66683ZM8.00016 8.66669L2.66683 5.33335V12H13.3335V5.33335L8.00016 8.66669ZM8.00016 7.33335L13.3335 4.00002H2.66683L8.00016 7.33335Z" fill="currentColor"/>
-                                            </g>
-                                        </svg>
-                                        쪽지 보내기
-                                    </button>
-                                    ` : ''}
-                                `;
-                                followingList.appendChild(listItem);
-                            });
-                            renderPagination(pagination.totalPages);
-                        } else {
-                            followingList.innerHTML = `<p style="text-align: center; color: #8D8989;">팔로잉하는 사용자가 없습니다.</p>`;
-                            paginationContainer.innerHTML = '';
-                        }
+                        alert('스토리가 성공적으로 등록되었습니다.');
+                        window.location.href = '/'; // 메인 페이지로 이동
                     } else {
-                        console.error('API 응답 오류:', result.message || '데이터를 불러오지 못했습니다.');
-                        followingList.innerHTML = `<p style="text-align: center; color: #e74c3c;">팔로잉 목록을 불러오지 못했습니다.</p>`;
-                        paginationContainer.innerHTML = '';
+                        messageArea.textContent = result.message || '스토리 등록에 실패했습니다.';
                     }
                 } catch (error) {
-                    console.error('팔로잉 목록 불러오기 에러:', error);
-                    followingList.innerHTML = `<p style="text-align: center; color: #e74c3c;">팔로잉 목록을 불러오지 못했습니다.</p>`;
-                    paginationContainer.innerHTML = '';
+                    console.error('스토리 등록 에러:', error);
+                    messageArea.textContent = '서버 오류로 스토리 등록에 실패했습니다.';
                 }
-            }
+            });
 
-            // 페이지네이션 렌더링 함수
-            function renderPagination(totalPages) {
-                paginationContainer.innerHTML = '';
-                if (totalPages <= 1) return;
+            // 이미지 선택 버튼 클릭 이벤트
+            selectImageButton.addEventListener('click', () => {
+                storyImageInput.click();
+            });
 
-                const prevButton = document.createElement('button');
-                prevButton.textContent = '< 이전';
-                prevButton.disabled = currentPage === 1;
-                prevButton.addEventListener('click', () => {
-                    if (currentPage > 1) {
-                        currentPage--;
-                        fetchFollowing();
-                    }
-                });
-                paginationContainer.appendChild(prevButton);
-
-                const maxPageButtons = 5;
-                let startPage = Math.max(1, currentPage - Math.floor(maxPageButtons / 2));
-                let endPage = Math.min(totalPages, startPage + maxPageButtons - 1);
-                
-                if (endPage - startPage + 1 < maxPageButtons) {
-                    startPage = Math.max(1, totalPages - maxPageButtons + 1);
+            // 파일 선택 시 파일명 표시
+            storyImageInput.addEventListener('change', () => {
+                if (storyImageInput.files.length > 0) {
+                    fileNameDisplay.textContent = storyImageInput.files[0].name;
+                } else {
+                    fileNameDisplay.textContent = '파일을 선택해 주세요';
                 }
-
-                for (let i = startPage; i <= endPage; i++) {
-                    const pageBtn = document.createElement('button');
-                    pageBtn.textContent = i;
-                    if (i === currentPage) pageBtn.classList.add('active');
-                    pageBtn.addEventListener('click', () => {
-                        currentPage = i;
-                        fetchFollowing();
-                    });
-                    paginationContainer.appendChild(pageBtn);
-                }
-
-                const nextButton = document.createElement('button');
-                nextButton.textContent = '다음 >';
-                nextButton.disabled = currentPage === totalPages;
-                nextButton.addEventListener('click', () => {
-                    if (currentPage < totalPages) {
-                        currentPage++;
-                        fetchFollowing();
-                    }
-                });
-                paginationContainer.appendChild(nextButton);
-            }
-            
-            await fetchFollowing();
+            });
         });
     </script>
 </body>

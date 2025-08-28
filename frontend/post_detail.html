@@ -1088,7 +1088,7 @@
                             </button>
                         `;
                         document.getElementById('sendMessageButton').addEventListener('click', () => {
-                            window.location.href = `/message_compose.html?receiverId=${authorId}&receiverNickname=${currentPostData.user_id.nickname}`;
+                            window.location.href = `/message.html?receiverId=${authorId}&receiverNickname=${currentPostData.user_id.nickname}`;
                         });
                     }
                 }
