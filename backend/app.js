@@ -9,6 +9,7 @@ import './models/Post.js';
 import './models/Comment.js';
 import './models/Like.js';
 import './models/Message.js';
+import './models/Story.js';
 
 // 라우터 import
 import authRoutes from './routes/auths.js';
@@ -18,6 +19,7 @@ import likeRoutes from './routes/likes.js';
 import followRoutes from './routes/follows.js';
 import userRoutes from './routes/users.js';
 import messageRoutes from './routes/messages.js';
+import storyRoutes from './routes/stories.js';
 import HTTP_STATUS from './constants/httpStatusCodes.js';
 
 
@@ -54,6 +56,7 @@ app.use('/api/likes', likeRoutes);
 app.use('/api/follows', followRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/messages',messageRoutes);
+app.use('/api/stories', storyRoutes);
 
 app.get('/', (req, res) => {
   res.json({ 

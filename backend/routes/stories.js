@@ -91,6 +91,42 @@ router.post('/', authenticateToken, upload.single('image'), async (req, res) => 
   }
 });
 
+// 내 스토리 목록 조회
+router.get('/my-stories', authenticateToken, async (req, res) => {
+  try {
+    const user_id = req.user.id;
+
+    // 24시간 내의 내 스토리 조회
+    const stories = await Story.find({
+      user_id: user_id,
+      createdAt: { $gt: moment().subtract(24, 'hours').toDate() }
+    })
+    .sort({ createdAt: -1 })
+    .select('content image_url createdAt');
+
+    const formatted_stories = stories.map(story => ({
+      id: story._id,
+      content: story.content,
+      image_url: story.image_url,
+      createdAt: story.createdAt,
+      created_at_display: formatStoryTime(story.createdAt)
+    }));
+
+    res.status(HTTP_STATUS.OK).json({
+      success: true,
+      message: '내 스토리 목록 조회 성공',
+      data: { my_stories: formatted_stories }
+    });
+
+  } catch (error) {
+    console.error('내 스토리 조회 에러:', error);
+    res.status(HTTP_STATUS.INTERNAL_SERVER_ERROR).json({
+      success: false,
+      message: '서버 오류가 발생했습니다'
+    });
+  }
+});
+
 // 팔로우한 사용자들의 스토리 조회
 router.get('/feed', authenticateToken, async (req, res) => {
   try {
