@@ -456,6 +456,7 @@
     <script>
         document.addEventListener('DOMContentLoaded', async () => {
             const accessToken = localStorage.getItem('accessToken');
+            const userId = localStorage.getItem('userId');
             const userNickname = localStorage.getItem('userNickname');
             const headerRight = document.getElementById('headerRight');
             const storiesSection = document.getElementById('storiesSection');
@@ -497,7 +498,7 @@
                             </svg>
                             쪽지
                         </a>
-                        <a href="/user_page.html" class="user-profile-group">
+                        <a href="/user_page.html?userId=${userId}" class="user-profile-group">
                             <div class="profile-icon">
                                 <!-- 사용자 프로필 이미지 (백엔드에서 받아오거나 기본 이미지) -->
                                 <img src="https://placehold.co/30x30/d9d9d9/555555?text=P" alt="Profile">
