@@ -195,12 +195,16 @@ router.get('/:storyId', authenticateToken, async (req, res) => {
         return res.status(HTTP_STATUS.NOT_FOUND).json({ success: false, message: '스토리를 찾을 수 없습니다' });
       }
 
-      // 팔로우한 사용자만 조회 가능
-      const isFollowing = await User.exists({ _id: currentUserId, following: story.user_id });
-      const isOwner = story.user_id.toString() === currentUserId;
+      // 스토리 소유자 확인
+      const isOwner = story.user_id.toString() === currentUserId.toString();
 
-      if (!isFollowing && !isOwner) {
-          return res.status(HTTP_STATUS.FORBIDDEN).json({ success: false, message: '팔로우한 사용자만 스토리를 볼 수 있습니다' });
+      if (!isOwner) {
+          // 소유자가 아니면 팔로우 상태 확인
+          const isFollowing = await User.exists({ _id: currentUserId, following: story.user_id });
+
+          if (!isFollowing) {
+              return res.status(HTTP_STATUS.FORBIDDEN).json({ success: false, message: '팔로우한 사용자만 스토리를 볼 수 있습니다' });
+          }
       }
 
       if (!story.viewed_by.includes(currentUserId)) {
