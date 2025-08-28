@@ -128,62 +128,6 @@ router.get('/followers/:userId', async (req, res) => {
   }
 });
 
-// 팔로잉 목록 조회
-router.get('/following/:userId', async (req, res) => {
-  try {
-    const { userId } = req.params;
-    const page = parseInt(req.query.page) || 1;
-    const limit = parseInt(req.query.limit) || 20;
-    const skip = (page - 1) * limit;
-
-    // 사용자 존재 여부 확인
-    const user = await User.findById(userId);
-    if (!user) {
-      return res.status(HTTP_STATUS.NOT_FOUND).json({
-        success: false,
-        message: '존재하지 않는 사용자입니다'
-      });
-    }
-
-    // 팔로잉 목록 조회 (페이지네이션 적용)
-    const following = await User.findById(userId)
-      .populate({
-        path: 'following',
-        select: 'id nickname',
-        options: {
-          skip: skip,
-          limit: limit
-        }
-      })
-      .select('following following_count');
-
-    const total_pages = Math.ceil(user.following_count / limit);
-
-    res.status(HTTP_STATUS.OK).json({
-      success: true,
-      message: '팔로잉 목록 조회 성공',
-      data: {
-        following: following.following,
-        pagination: {
-          currentPage: page,
-          totalPages: total_pages,
-          totalFollowing: user.following_count,
-          limit,
-          hasNextPage: page < total_pages,
-          hasPrevPage: page > 1
-        }
-      }
-    });
-
-  } catch (error) {
-    console.error('팔로잉 목록 조회 에러:', error);
-    res.status(HTTP_STATUS.INTERNAL_SERVER_ERROR).json({
-      success: false,
-      message: '서버 오류가 발생했습니다'
-    });
-  }
-});
-
 // 팔로우 상태 확인
 router.get('/status/:userId', authenticateToken, async (req, res) => {
   try {
