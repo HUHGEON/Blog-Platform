@@ -755,7 +755,7 @@
 
                 // 쪽지 보내기 버튼
                 const messageBtn = document.createElement('a');
-                messageBtn.href = `/message.html?to=${userId}&nickname=${currentUserData?.nickname}`;
+                messageBtn.href = `/message.html?receiverId=${userId}&receiverNickname=${currentUserData?.nickname}`;
                 messageBtn.className = 'message-btn';
                 messageBtn.innerHTML = `
                     <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 28 28" fill="none">
